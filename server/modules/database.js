@@ -62,6 +62,26 @@ exports.fetchUser = (userid) => {
     });
 };
 
+/* ---------------------------------- Tasks --------------------------------- */
+// Adds a new task list for the user with the given id
+exports.insertTaskList = (userid, taskList) => {
+    let query = {
+        _id: userid,
+    };
+    let action = {
+        $push: { tasklists: taskList },
+    };
+    return new Promise((resolve, reject) => {
+        usersCol.updateOne(query, action, (err, res) => {
+            if (err) {
+                reject(err);
+            } else {
+                resolve(res);
+            }
+        });
+    });
+};
+
 // insertPerson = () => {
 //     return new Promise((resolve, reject) => {
 //         dbo.collection("people").insertOne(myobj, (err, res) => {

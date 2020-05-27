@@ -22,6 +22,7 @@ app.get("/", (req, res) => {
 });
 
 /* ----------------------------- User Endpoints ----------------------------- */
+// Create a new user
 app.post("/users", (req, res) => {
     // TODO - Validation
     let userInfo = {
@@ -44,6 +45,7 @@ app.post("/users", (req, res) => {
     res.status(201).send(user);
 });
 
+// Fetch an existing user
 app.get("/users/:userid", async (req, res) => {
     let user;
     let code = 200;
@@ -65,6 +67,19 @@ app.get("/users/:userid", async (req, res) => {
         });
 
     res.status(code).send(user);
+});
+
+/* ----------------------------- Task Endpoints ----------------------------- */
+// Create a new list of tasks
+app.post("/tasks/newlist", (req, res) => {
+    let userid = req.query.userid;
+    let list = {
+        title: req.body.title,
+        tasks: [],
+    };
+
+    DB.insertTaskList(userid, list).catch((err) => console.error(err));
+    res.status(201).send(list);
 });
 
 /* -------------------------------------------------------------------------- */
