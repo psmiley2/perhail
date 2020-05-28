@@ -42,7 +42,7 @@ app.post("/users", async (req, res) => {
         preferences: [],
         tracks: [],
         goals: [],
-        eventlists: [],
+        events: [],
     };
 
     await DB.insertUser(user)
@@ -303,6 +303,38 @@ app.get("/goals/:userid", async (req, res) => {
 });
 // !SECTION
 
+// SECTION - FETCH ALL GOALS
+// Fetch all goals
+app.get("/goals/:userid", async (req, res) => {
+    let userid = req.params.userid;
+    let code = 400;
+    let goals = [];
+    if (!validID(userid)) {
+        res.status(code).send("a valid userid must be set as a url parameter");
+        return;
+    }
+    userid = new ObjectID(userid);
+
+    await DB.fetchAllGoals(userid)
+        .then((res) => {
+            goals = res;
+            code = res ? 200 : 400;
+        })
+        .catch((err) => {
+            console.error(err);
+            code = 400;
+        });
+
+    if (code == 200) {
+        res.status(code).send(goals);
+    } else {
+        res.status(code).send(
+            "Could not find a match to given userid in the DB. Or else check databse connection"
+        );
+    }
+});
+// !SECTION
+
 // SECTION - FETCH GOAL
 // Fetch a goal
 app.get("/goals/:userid/:goalid", async (req, res) => {
@@ -381,38 +413,6 @@ app.post("/preferences/:userid", async (req, res) => {
 });
 // !SECTION
 
-// SECTION - FETCH ALL GOALS
-// Fetch all goals
-app.get("/goals/:userid", async (req, res) => {
-    let userid = req.params.userid;
-    let code = 400;
-    let goals = [];
-    if (!validID(userid)) {
-        res.status(code).send("a valid userid must be set as a url parameter");
-        return;
-    }
-    userid = new ObjectID(userid);
-
-    await DB.fetchAllGoals(userid)
-        .then((res) => {
-            goals = res;
-            code = res ? 200 : 400;
-        })
-        .catch((err) => {
-            console.error(err);
-            code = 400;
-        });
-
-    if (code == 200) {
-        res.status(code).send(goals);
-    } else {
-        res.status(code).send(
-            "Could not find a match to given userid in the DB. Or else check databse connection"
-        );
-    }
-});
-// !SECTION
-
 // SECTION - FETCH ALL PREFERENCES
 // Fetch all preferences
 app.get("/preferences/:userid", async (req, res) => {
@@ -483,20 +483,121 @@ app.get("/preferences/:userid/:preferenceid", async (req, res) => {
     }
 });
 // !SECTION
-// TODO - CREATE PREFERENCE
-// TODO - ADD PREFERENCE
 // TODO - DELETE PREFERENCE
 // TODO - UPDATE PREFERENCE
 // !SECTION
 
 /* ----------------------------- Events Endpoint ---------------------------- */
 // SECTION - EVENTS
-// TODO - CREATE EVENTS LIST
-// TODO - ADD EVENTS
-// TODO - DELETE EVENTS
-// TODO - UPDATE EVENTS
-// TODO - DELETE EVENTS LIST
-// TODO - FETCH EVENTS LIST
+// SECTION - CREATE EVENTS
+// Add a new event
+app.post("/events/:userid", async (req, res) => {
+    let userid = req.params.userid;
+    let code = 400;
+    if (!validID(userid)) {
+        res.status(code).send("a valid userid must be set as a url parameter");
+        return;
+    }
+    userid = new ObjectID(userid);
+    let event = {
+        _id: new ObjectID(),
+        title: req.body.title,
+        // TODO - Other fields such as start time, end time, category, ect.
+    };
+
+    await DB.insertEvent(userid, event)
+        .then((res) => {
+            if (res >= 1) {
+                code = 201;
+            } else {
+                code = 400;
+            }
+        })
+        .catch((err) => console.error(err));
+    if (code == 201) {
+        res.status(code).send(event);
+    } else if (code == 400) {
+        res.status(code).send(
+            "could not find a match in the database based on passed in ID"
+        );
+    } else {
+        res.status(500).send("unexpected error");
+    }
+});
+// !SECTION
+
+// SECTION - FETCH ALL EVENTS
+// Fetch all events
+app.get("/events/:userid", async (req, res) => {
+    let userid = req.params.userid;
+    let code = 400;
+    let events = [];
+    if (!validID(userid)) {
+        res.status(code).send("a valid userid must be set as a url parameter");
+        return;
+    }
+    userid = new ObjectID(userid);
+
+    await DB.fetchAllEvents(userid)
+        .then((res) => {
+            events = res;
+            code = res ? 200 : 400;
+        })
+        .catch((err) => {
+            console.error(err);
+            code = 400;
+        });
+
+    if (code == 200) {
+        res.status(code).send(events);
+    } else {
+        res.status(code).send(
+            "Could not find a match to given userid in the DB. Or else check databse connection"
+        );
+    }
+});
+// !SECTION
+
+// SECTION - FETCH EVENT
+// Fetch an event
+app.get("/events/:userid/:eventid", async (req, res) => {
+    let userid = req.params.userid;
+    let eventid = req.params.eventid;
+    let code = 400;
+    let event = {};
+    if (!validID(userid)) {
+        res.status(code).send("a valid userid must be set as a url parameter");
+        return;
+    }
+    if (!validID(eventid)) {
+        res.status(code).send(
+            "a valid preferenceid must be set as a url parameter"
+        );
+        return;
+    }
+    userid = new ObjectID(userid);
+
+    await DB.fetchEvent(userid, eventid)
+        .then((res) => {
+            event = res;
+            code = res ? 200 : 400;
+        })
+        .catch((err) => {
+            console.error(err);
+            code = 400;
+        });
+
+    if (code == 200) {
+        res.status(code).send(event);
+    } else {
+        res.status(code).send(
+            "Could not find a match to given IDs in the DB. Or else check databse connection"
+        );
+    }
+});
+// !SECTION
+// TODO - DELETE EVENT
+// TODO - UPDATE EVENT
 // !SECTION
 
 /* ----------------------------- Tracks Endpoint ----------------------------- */

@@ -265,3 +265,70 @@ exports.fetchPreference = (userid, preferenceid) => {
         });
     });
 };
+
+/* --------------------------------- Events --------------------------------- */
+// SECTION - EVENT
+// Adds a new event for the user with the given id
+exports.insertEvent = (userid, event) => {
+    let query = {
+        _id: userid,
+    };
+    let action = {
+        $push: { events: event },
+    };
+    return new Promise((resolve, reject) => {
+        usersCol
+            .updateOne(query, action)
+            .then((res) => {
+                resolve(res.result.nModified);
+            })
+            .catch((err) => {
+                reject(err);
+            });
+    });
+};
+
+// Fetches all events for the user based on the user id
+exports.fetchAllEvents = (userid) => {
+    let query = {
+        _id: userid,
+    };
+    return new Promise((resolve, reject) => {
+        usersCol.findOne(query, (err, res) => {
+            if (err) {
+                reject(err);
+            } else {
+                if (res == null) {
+                    reject("No user matches with the passed in id");
+                    return;
+                }
+                resolve(res.events);
+            }
+        });
+    });
+};
+
+// Fetches an event for the user based on the user id and the event id
+exports.fetchEvent = (userid, eventid) => {
+    let query = {
+        _id: userid,
+    };
+    return new Promise((resolve, reject) => {
+        usersCol.findOne(query, (err, res) => {
+            if (err) {
+                reject(err);
+            } else {
+                if (res == null) {
+                    reject("No user matches with the passed in id");
+                    return;
+                }
+                for (event of res.events) {
+                    if (event._id == eventid) {
+                        resolve(event);
+                    }
+                }
+                reject("No goals match with that id for the given user");
+            }
+        });
+    });
+};
