@@ -33,6 +33,7 @@ exports.establishConnection = () => {
 /* -------------------------------------------------------------------------- */
 
 /* ---------------------------------- Users --------------------------------- */
+// SECTION - USERS
 // Puts a user in the DB
 exports.insertUser = (user) => {
     return new Promise((resolve, reject) => {
@@ -63,6 +64,7 @@ exports.fetchUser = (userid) => {
 };
 
 /* ---------------------------------- Tasks --------------------------------- */
+// SECTION - TASKS
 // Adds a new task list for the user with the given id
 exports.insertTaskList = (userid, taskList) => {
     let query = {
@@ -84,7 +86,7 @@ exports.insertTaskList = (userid, taskList) => {
 };
 
 // Fetches a tasklist from the DB
-exports.fetchTaskList = (userid, tasklistid) => {
+exports.fetchTaskList = (userid, listid) => {
     let query = {
         _id: userid,
     };
@@ -98,7 +100,7 @@ exports.fetchTaskList = (userid, tasklistid) => {
                     return;
                 }
                 for (list of res.tasklists) {
-                    if (list._id == tasklistid) {
+                    if (list._id == listid) {
                         resolve(list);
                     }
                 }
@@ -127,5 +129,52 @@ exports.insertTask = (userid, listid, task) => {
             .catch((err) => {
                 reject(err);
             });
+    });
+};
+
+/* ---------------------------------- Goals --------------------------------- */
+// SECTION - GOALS
+// Adds a new goal for the user with the given id
+exports.insertGoal = (userid, goal) => {
+    let query = {
+        _id: userid,
+    };
+    let action = {
+        $push: { goals: goal },
+    };
+    return new Promise((resolve, reject) => {
+        usersCol
+            .updateOne(query, action)
+            .then((res) => {
+                resolve(res.result.nModified);
+            })
+            .catch((err) => {
+                reject(err);
+            });
+    });
+};
+
+// Fetches a goal for the user based on the user id and the goal id
+exports.fetchGoal = (userid, goalid) => {
+    let query = {
+        _id: userid,
+    };
+    return new Promise((resolve, reject) => {
+        usersCol.findOne(query, (err, res) => {
+            if (err) {
+                reject(err);
+            } else {
+                if (res == null) {
+                    reject("No user matches with the passed in id");
+                    return;
+                }
+                for (goal of res.goals) {
+                    if (goal._id == goalid) {
+                        resolve(goal);
+                    }
+                }
+                reject("No goals match with that id for the given user");
+            }
+        });
     });
 };
