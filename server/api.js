@@ -7,7 +7,7 @@ const bodyParser = require("body-parser");
 const bcrypt = require("bcrypt");
 require("dotenv").config();
 const saltRounds = 10;
-
+let ObjectID = require("mongodb").ObjectID;
 let app = express();
 const DB = require(path.join(__dirname, "modules", "database.js"));
 
@@ -73,7 +73,13 @@ app.get("/users/:userid", async (req, res) => {
 // Create a new list of tasks
 app.post("/tasks/newlist", (req, res) => {
     let userid = req.query.userid;
+    if (userid == undefined || userid.length != 24) {
+        res.status(400).send("userid must be set as a query parameter");
+        return;
+    }
+    userid = new ObjectID(userid);
     let list = {
+        _id: new ObjectID(),
         title: req.body.title,
         tasks: [],
     };

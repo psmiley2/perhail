@@ -72,13 +72,14 @@ exports.insertTaskList = (userid, taskList) => {
         $push: { tasklists: taskList },
     };
     return new Promise((resolve, reject) => {
-        usersCol.updateOne(query, action, (err, res) => {
-            if (err) {
-                reject(err);
-            } else {
+        usersCol
+            .updateOne(query, action)
+            .then((res) => {
                 resolve(res);
-            }
-        });
+            })
+            .catch((err) => {
+                reject(err);
+            });
     });
 };
 
