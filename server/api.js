@@ -309,27 +309,88 @@ app.get("/goals/:userid/:goalid", async (req, res) => {
 // !SECTION
 // TODO - DELETE GOAL
 // TODO - UPDATE GOAL
-// TODO - FETCH GOAL
-// !SECTION
-
-/* ----------------------------- Tracks Endpoint ----------------------------- */
-// SECTION - TRACKS
-// TODO - CREATE TRACKS LIST
-// TODO - ADD TRACKS
-// TODO - DELETE TRACKS
-// TODO - UPDATE TRACKS
-// TODO - DELETE TRACKS LIST
-// TODO - FETCH TRACKS LIST
 // !SECTION
 
 /* -------------------------- Preferences Endpoint -------------------------- */
 // SECTION - PREFERENCES
-// TODO - CREATE PREFERENCES LIST
+// SECTION - CREATE PREFERENCES
+// Add a new preference
+app.post("/preferences/:userid", async (req, res) => {
+    let userid = req.params.userid;
+    let code = 400;
+    if (!validID(userid)) {
+        res.status(code).send("a valid userid must be set as a url parameter");
+        return;
+    }
+    userid = new ObjectID(userid);
+    let preference = {
+        _id: new ObjectID(),
+        title: req.body.title, // TODO - if no title is given make it ""
+    };
+
+    await DB.insertPreference(userid, preference)
+        .then((res) => {
+            if (res >= 1) {
+                code = 201;
+            } else {
+                code = 400;
+            }
+        })
+        .catch((err) => console.error(err));
+    if (code == 201) {
+        res.status(code).send(preference);
+    } else if (code == 400) {
+        res.status(code).send(
+            "could not find a match in the database based on passed in ID"
+        );
+    } else {
+        res.status(500).send("unexpected error");
+    }
+});
+// !SECTION
+
+// SECTION - FETCH PREFERENCE
+// Fetch a preference
+app.get("/preferences/:userid/:preferenceid", async (req, res) => {
+    let userid = req.params.userid;
+    let preferenceid = req.params.preferenceid;
+    let code = 400;
+    let preference = {};
+    if (!validID(userid)) {
+        res.status(code).send("a valid userid must be set as a url parameter");
+        return;
+    }
+    if (!validID(preferenceid)) {
+        res.status(code).send(
+            "a valid preferenceid must be set as a url parameter"
+        );
+        return;
+    }
+    userid = new ObjectID(userid);
+
+    await DB.fetchPreference(userid, preferenceid)
+        .then((res) => {
+            preference = res;
+            code = res ? 200 : 400;
+        })
+        .catch((err) => {
+            console.error(err);
+            code = 400;
+        });
+
+    if (code == 200) {
+        res.status(code).send(preference);
+    } else {
+        res.status(code).send(
+            "Could not find a match to given IDs in the DB. Or else check databse connection"
+        );
+    }
+});
+// !SECTION
+// TODO - CREATE PREFERENCE
 // TODO - ADD PREFERENCE
 // TODO - DELETE PREFERENCE
 // TODO - UPDATE PREFERENCE
-// TODO - DELETE PREFERENCES LIST
-// TODO - FETCH PREFERENCES LIST
 // !SECTION
 
 /* ----------------------------- Events Endpoint ---------------------------- */
@@ -340,6 +401,16 @@ app.get("/goals/:userid/:goalid", async (req, res) => {
 // TODO - UPDATE EVENTS
 // TODO - DELETE EVENTS LIST
 // TODO - FETCH EVENTS LIST
+// !SECTION
+
+/* ----------------------------- Tracks Endpoint ----------------------------- */
+// SECTION - TRACKS
+// TODO - CREATE TRACKS LIST
+// TODO - ADD TRACKS
+// TODO - DELETE TRACKS
+// TODO - UPDATE TRACKS
+// TODO - DELETE TRACKS LIST
+// TODO - FETCH TRACKS LIST
 // !SECTION
 
 /* -------------------------------------------------------------------------- */

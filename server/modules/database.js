@@ -178,3 +178,50 @@ exports.fetchGoal = (userid, goalid) => {
         });
     });
 };
+
+/* ------------------------------- Preferences ------------------------------ */
+// SECTION - PREFERENCES
+// Adds a new preference for the user with the given id
+exports.insertPreference = (userid, preference) => {
+    let query = {
+        _id: userid,
+    };
+    let action = {
+        $push: { preferences: preference },
+    };
+    return new Promise((resolve, reject) => {
+        usersCol
+            .updateOne(query, action)
+            .then((res) => {
+                resolve(res.result.nModified);
+            })
+            .catch((err) => {
+                reject(err);
+            });
+    });
+};
+
+// Fetches a preference for the user based on the user id and the preference id
+exports.fetchPreference = (userid, preferenceid) => {
+    let query = {
+        _id: userid,
+    };
+    return new Promise((resolve, reject) => {
+        usersCol.findOne(query, (err, res) => {
+            if (err) {
+                reject(err);
+            } else {
+                if (res == null) {
+                    reject("No user matches with the passed in id");
+                    return;
+                }
+                for (preference of res.preferences) {
+                    if (preference._id == preferenceid) {
+                        resolve(preference);
+                    }
+                }
+                reject("No goals match with that id for the given user");
+            }
+        });
+    });
+};
