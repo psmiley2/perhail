@@ -83,6 +83,31 @@ exports.insertTaskList = (userid, taskList) => {
     });
 };
 
+// Fetches a tasklist from the DB
+exports.fetchTaskList = (userid, tasklistid) => {
+    let query = {
+        _id: userid,
+    };
+    return new Promise((resolve, reject) => {
+        usersCol.findOne(query, (err, res) => {
+            if (err) {
+                reject(err);
+            } else {
+                if (res == null) {
+                    reject("No user matches with the passed in id");
+                    return;
+                }
+                for (list of res.tasklists) {
+                    if (list._id == tasklistid) {
+                        resolve(list);
+                    }
+                }
+                reject("No task lists match with that id for the given user");
+            }
+        });
+    });
+};
+
 exports.insertTask = (userid, listid, task) => {
     let query = {
         _id: userid,

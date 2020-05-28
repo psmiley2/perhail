@@ -123,33 +123,40 @@ app.post("/tasks/list/:userid", async (req, res) => {
 });
 
 // Fetch a tasklist
-app.get("/tasks/list/:userid/:taskid", async (req, res) => {
+app.get("/tasks/list/:userid/:tasklistid", async (req, res) => {
     let user;
     let code = 200;
     let userid = req.params.userid;
+    let tasklistid = req.params.tasklistid;
 
-    if (userid.length != 24) {
+    if (userid == undefined || userid.length != 24) {
         res.status(400).send("invalid user id");
         return;
     }
-    if (taskid.length != 24) {
+    if (tasklistid == undefined || tasklistid.length != 24) {
         res.status(400).send("invalid task id");
         return;
     }
 
     userid = new ObjectID(userid);
 
-    await DB.fetchTaskList(userid, taskid)
+    await DB.fetchTaskList(userid, tasklistid)
         .then((res) => {
             user = res;
             code = res ? 200 : 400;
         })
         .catch((err) => {
             console.error(err);
-            code = 500;
+            code = 400;
         });
 
-    res.status(code).send(user);
+    if (code == 200) {
+        res.status(code).send(user);
+    } else {
+        res.status(code).send(
+            "Could not find a match to given IDs in the DB. Or else check databse connection"
+        );
+    }
 });
 
 // Create a new task
