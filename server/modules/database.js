@@ -40,7 +40,7 @@ exports.insertUser = (user) => {
             if (err) {
                 reject(err);
             } else {
-                resolve(res);
+                resolve(res.insertedCount);
             }
         });
     });
@@ -49,7 +49,7 @@ exports.insertUser = (user) => {
 // Fetches a user from the DB
 exports.fetchUser = (userid) => {
     let query = {
-        _id: new ObjectID(userid),
+        _id: userid,
     };
     return new Promise((resolve, reject) => {
         usersCol.findOne(query, (err, res) => {
@@ -75,7 +75,7 @@ exports.insertTaskList = (userid, taskList) => {
         usersCol
             .updateOne(query, action)
             .then((res) => {
-                resolve(res);
+                resolve(res.result.nModified);
             })
             .catch((err) => {
                 reject(err);
@@ -83,42 +83,24 @@ exports.insertTaskList = (userid, taskList) => {
     });
 };
 
-// insertPerson = () => {
-//     return new Promise((resolve, reject) => {
-//         dbo.collection("people").insertOne(myobj, (err, res) => {
-//             if (err) reject("err => ", err);
-//             console.log("returned id => ", res.ops[0]._id);
-//             resolve(res.ops[0]._id);
-//             // db.close();
-//         });
-//     });
-// };
-
-// insertPerson(myobj, dbo)
-//     .then((res) => {
-//         userID = res;
-//     })
-//     .catch((err) => console.log(err));
-
-// findPerson = (userID, dbo) => {
-//     // query =
-//     //     ({ _id: userID },
-//     //     { $push: { "tasklists.$[].$[tasklist].tasks": "HERRO" } },
-//     //     { arrayFilters: [{ "tasklist.title": "weekly" }] });
-//     return new Promise((resolve, reject) => {
-//         try {
-//             dbo.collection("people").updateOne(
-//                 { _id: userID },
-//                 { $push: { "tasklists.$[list].tasks": "new element" } },
-//                 { arrayFilters: [{ "list.name": "daily" }] },
-//                 { upsert: true }
-//             );
-//         } catch (error) {
-//             reject(error);
-//         }
-//     });
-// };
-
-// findPerson(userID, dbo)
-//     .then((res) => console.log(res))
-//     .catch((err) => console.log(err));
+exports.insertTask = (userid, listid, task) => {
+    let query = {
+        _id: userid,
+    };
+    let action = {
+        $push: { "tasklists.$[list].tasks": task },
+    };
+    let filter = {
+        arrayFilters: [{ "list._id": listid }],
+    };
+    return new Promise((resolve, reject) => {
+        usersCol
+            .updateOne(query, action, filter)
+            .then((res) => {
+                resolve(res.result.nModified);
+            })
+            .catch((err) => {
+                reject(err);
+            });
+    });
+};

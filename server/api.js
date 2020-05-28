@@ -23,12 +23,13 @@ app.get("/", (req, res) => {
 
 /* ----------------------------- User Endpoints ----------------------------- */
 // Create a new user
-app.post("/users", (req, res) => {
+app.post("/users", async (req, res) => {
     // TODO - Validation
     let userInfo = {
         email: req.body.email,
         hash: "",
     };
+    let code = 400;
     const hash = bcrypt.hashSync(req.body.password, saltRounds);
     userInfo.hash = hash;
 
@@ -41,22 +42,38 @@ app.post("/users", (req, res) => {
         eventlists: [],
     };
 
-    DB.insertUser(user).catch((err) => console.error(err));
-    res.status(201).send(user);
+    await DB.insertUser(user)
+        .then((res) => {
+            if (res == 1) {
+                code = 201;
+            } else {
+                code == 500;
+            }
+        })
+        .catch((err) => console.error(err));
+    if (code == 201) {
+        res.status(code).send(user);
+    } else {
+        res.status(code).send(
+            "Unexpected error occured. Check Database connection"
+        );
+    }
 });
 
 // Fetch an existing user
 app.get("/users/:userid", async (req, res) => {
     let user;
-    let code = 200;
+    let code = 400;
     let userid = req.params.userid;
 
     if (userid.length != 24) {
-        res.status(400).send("invalid user id");
+        res.status(code).send("invalid user id");
         return;
     }
 
-    await DB.fetchUser(req.params.userid)
+    userid = new ObjectID(userid);
+
+    await DB.fetchUser(userid)
         .then((res) => {
             user = res;
             code = res ? 200 : 400;
@@ -71,10 +88,11 @@ app.get("/users/:userid", async (req, res) => {
 
 /* ----------------------------- Task Endpoints ----------------------------- */
 // Create a new list of tasks
-app.post("/tasks/newlist", (req, res) => {
-    let userid = req.query.userid;
+app.post("/tasks/list/:userid", async (req, res) => {
+    let userid = req.params.userid;
+    let code = 400;
     if (userid == undefined || userid.length != 24) {
-        res.status(400).send("userid must be set as a query parameter");
+        res.status(code).send("a valid userid must be set as a url parameter");
         return;
     }
     userid = new ObjectID(userid);
@@ -84,8 +102,96 @@ app.post("/tasks/newlist", (req, res) => {
         tasks: [],
     };
 
-    DB.insertTaskList(userid, list).catch((err) => console.error(err));
-    res.status(201).send(list);
+    await DB.insertTaskList(userid, list)
+        .then((res) => {
+            if (res >= 1) {
+                code = 201;
+            } else {
+                code = 400;
+            }
+        })
+        .catch((err) => console.error(err));
+    if (code == 201) {
+        res.status(code).send(list);
+    } else if (code == 400) {
+        res.status(code).send(
+            "could not find a match in the database based on passed in ID"
+        );
+    } else {
+        res.status(500).send("unexpected error");
+    }
+});
+
+// Fetch a tasklist
+app.get("/tasks/list/:userid/:taskid", async (req, res) => {
+    let user;
+    let code = 200;
+    let userid = req.params.userid;
+
+    if (userid.length != 24) {
+        res.status(400).send("invalid user id");
+        return;
+    }
+    if (taskid.length != 24) {
+        res.status(400).send("invalid task id");
+        return;
+    }
+
+    userid = new ObjectID(userid);
+
+    await DB.fetchTaskList(userid, taskid)
+        .then((res) => {
+            user = res;
+            code = res ? 200 : 400;
+        })
+        .catch((err) => {
+            console.error(err);
+            code = 500;
+        });
+
+    res.status(code).send(user);
+});
+
+// Create a new task
+app.post("/tasks/:userid/:listid", async (req, res) => {
+    let userid = req.params.userid;
+    let listid = req.params.listid;
+    let code = 400;
+    if (userid == undefined || userid.length != 24) {
+        res.status(code).send("a valid userid must be set as a url parameter");
+        return;
+    }
+    if (listid == undefined || listid.length != 24) {
+        res.status(code).send("a valid userid must be set as a url parameter");
+        return;
+    }
+    userid = new ObjectID(userid);
+    listid = new ObjectID(listid);
+    let task = {
+        _id: new ObjectID(),
+        title: req.body.title,
+        createdOn: new Date(),
+        completed: false,
+    };
+
+    await DB.insertTask(userid, listid, task)
+        .then((res) => {
+            if (res >= 1) {
+                code = 201;
+            } else {
+                code = 400;
+            }
+        })
+        .catch((err) => console.error(err));
+    if (code == 201) {
+        res.status(code).send(task);
+    } else if (code == 400) {
+        res.status(code).send(
+            "could not find a match in the database based on passed in IDs"
+        );
+    } else {
+        res.status(500).send("unexpected error");
+    }
 });
 
 /* -------------------------------------------------------------------------- */
