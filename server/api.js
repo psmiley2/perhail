@@ -113,7 +113,7 @@ app.post("/tasks/list/:userid", async (req, res) => {
     userid = new ObjectID(userid);
     let list = {
         _id: new ObjectID(),
-        title: req.body.title,
+        title: req.body.title, // TODO - if no title is given make it ""
         tasks: [],
     };
 
@@ -195,7 +195,7 @@ app.post("/tasks/:userid/:listid", async (req, res) => {
     listid = new ObjectID(listid);
     let task = {
         _id: new ObjectID(),
-        title: req.body.title,
+        title: req.body.title, // TODO - if no title is given make it ""
         createdOn: new Date(),
         completed: false,
     };
@@ -244,8 +244,8 @@ app.post("/goals/:userid", async (req, res) => {
     userid = new ObjectID(userid);
     let goal = {
         _id: new ObjectID(),
-        title: req.body.title,
-        priority: req.body.priority,
+        title: req.body.title, // TODO - if no title is given make it ""
+        priority: req.body.priority, // TODO - Set a default priority if none is given
         createdOn: new Date(),
         // TODO - Add fields (Sub goals, Progress, time since start, smart goals ect.)
     };
@@ -345,18 +345,18 @@ app.get("/goals/:userid/:goalid", async (req, res) => {
 /* -------------------------------------------------------------------------- */
 /*                                Server Start                                */
 /* -------------------------------------------------------------------------- */
-DB.establishConnection()
-    .then(() => {
-        app.listen(process.env.PORT);
-        console.log("listening...");
-    })
-    .catch((err) => {
-        console.error(err);
-        process.exit(1);
-    });
-
-module.exports = app;
-
+startServer = async (app) => {
+    await DB.establishConnection()
+        .then(() => {
+            app.listen(process.env.PORT);
+            console.log("listening...");
+        })
+        .catch((err) => {
+            console.error(err);
+            process.exit(1);
+        });
+    return app;
+};
 /* -------------------------------------------------------------------------- */
 /*                                    Utils                                   */
 /* -------------------------------------------------------------------------- */
@@ -367,3 +367,5 @@ validID = (id) => {
     return true;
     // More validation
 };
+
+app = startServer(app);
