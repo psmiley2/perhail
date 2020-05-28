@@ -271,6 +271,38 @@ app.post("/goals/:userid", async (req, res) => {
 });
 // !SECTION
 
+// SECTION - FETCH ALL GOALS
+// Fetch all goals
+app.get("/goals/:userid", async (req, res) => {
+    let userid = req.params.userid;
+    let code = 400;
+    let goals = [];
+    if (!validID(userid)) {
+        res.status(code).send("a valid userid must be set as a url parameter");
+        return;
+    }
+    userid = new ObjectID(userid);
+
+    await DB.fetchAllGoals(userid)
+        .then((res) => {
+            goals = res;
+            code = res ? 200 : 400;
+        })
+        .catch((err) => {
+            console.error(err);
+            code = 400;
+        });
+
+    if (code == 200) {
+        res.status(code).send(goals);
+    } else {
+        res.status(code).send(
+            "Could not find a match to given userid in the DB. Or else check databse connection"
+        );
+    }
+});
+// !SECTION
+
 // SECTION - FETCH GOAL
 // Fetch a goal
 app.get("/goals/:userid/:goalid", async (req, res) => {
@@ -345,6 +377,70 @@ app.post("/preferences/:userid", async (req, res) => {
         );
     } else {
         res.status(500).send("unexpected error");
+    }
+});
+// !SECTION
+
+// SECTION - FETCH ALL GOALS
+// Fetch all goals
+app.get("/goals/:userid", async (req, res) => {
+    let userid = req.params.userid;
+    let code = 400;
+    let goals = [];
+    if (!validID(userid)) {
+        res.status(code).send("a valid userid must be set as a url parameter");
+        return;
+    }
+    userid = new ObjectID(userid);
+
+    await DB.fetchAllGoals(userid)
+        .then((res) => {
+            goals = res;
+            code = res ? 200 : 400;
+        })
+        .catch((err) => {
+            console.error(err);
+            code = 400;
+        });
+
+    if (code == 200) {
+        res.status(code).send(goals);
+    } else {
+        res.status(code).send(
+            "Could not find a match to given userid in the DB. Or else check databse connection"
+        );
+    }
+});
+// !SECTION
+
+// SECTION - FETCH ALL PREFERENCES
+// Fetch all preferences
+app.get("/preferences/:userid", async (req, res) => {
+    let userid = req.params.userid;
+    let code = 400;
+    let preferences = [];
+    if (!validID(userid)) {
+        res.status(code).send("a valid userid must be set as a url parameter");
+        return;
+    }
+    userid = new ObjectID(userid);
+
+    await DB.fetchAllPreferences(userid)
+        .then((res) => {
+            preferences = res;
+            code = res ? 200 : 400;
+        })
+        .catch((err) => {
+            console.error(err);
+            code = 400;
+        });
+
+    if (code == 200) {
+        res.status(code).send(preferences);
+    } else {
+        res.status(code).send(
+            "Could not find a match to given IDs in the DB. Or else check databse connection"
+        );
     }
 });
 // !SECTION

@@ -154,6 +154,26 @@ exports.insertGoal = (userid, goal) => {
     });
 };
 
+// Fetches all goals for the user based on the user id
+exports.fetchAllGoals = (userid, goalid) => {
+    let query = {
+        _id: userid,
+    };
+    return new Promise((resolve, reject) => {
+        usersCol.findOne(query, (err, res) => {
+            if (err) {
+                reject(err);
+            } else {
+                if (res == null) {
+                    reject("No user matches with the passed in id");
+                    return;
+                }
+                resolve(res.goals);
+            }
+        });
+    });
+};
+
 // Fetches a goal for the user based on the user id and the goal id
 exports.fetchGoal = (userid, goalid) => {
     let query = {
@@ -198,6 +218,26 @@ exports.insertPreference = (userid, preference) => {
             .catch((err) => {
                 reject(err);
             });
+    });
+};
+
+// Fetches all goals for the user based on the user id
+exports.fetchAllPreferences = (userid) => {
+    let query = {
+        _id: userid,
+    };
+    return new Promise((resolve, reject) => {
+        usersCol.findOne(query, (err, res) => {
+            if (err) {
+                reject(err);
+            } else {
+                if (res == null) {
+                    reject("No user matches with the passed in id");
+                    return;
+                }
+                resolve(res.preferences);
+            }
+        });
     });
 };
 

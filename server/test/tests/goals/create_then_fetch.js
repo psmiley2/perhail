@@ -27,6 +27,19 @@ describe("create a goal and then fetch it", () => {
             });
     });
 
+    it("fetches all goals before any are posted", (done) => {
+        api.get(`/goals/${userid}`)
+            .expect(200)
+            .end((err, res) => {
+                if (err) {
+                    console.log(err);
+                    expect.fail();
+                }
+                expect(res.body).to.have.length(0);
+                done();
+            });
+    });
+
     it("creates a goal for that user", (done) => {
         body = {
             title: "get ripped",
@@ -65,12 +78,79 @@ describe("create a goal and then fetch it", () => {
             });
     });
 
+    it("fetches all goals after one is posted", (done) => {
+        api.get(`/goals/${userid}`)
+            .expect(200)
+            .end((err, res) => {
+                if (err) {
+                    console.log(err);
+                    expect.fail();
+                }
+                expect(res.body[0].title).to.equal("get ripped");
+                expect(res.body[0].priority).to.equal("2");
+                expect(res.body[0].createdOn).to.exist;
+                expect(res.body).to.have.length(1);
+                done();
+            });
+    });
+
+    it("creates a second goal for that user", (done) => {
+        body = {
+            title: "get good grades in school",
+            priority: "1",
+        };
+        api.post(`/goals/${userid}`)
+            .type("form")
+            .send(body)
+            .expect(201)
+            .end((err, res) => {
+                if (err) {
+                    console.error("error: ", err);
+                    expect.fail();
+                }
+                expect(res.body._id).to.have.length(24);
+                expect(res.body.title).to.equal("get good grades in school");
+                expect(res.body.priority).to.equal("1");
+                expect(res.body.createdOn).to.exist;
+                goalid = res.body._id;
+                done();
+            });
+    });
+
+    it("fetches the goal that was just created", (done) => {
+        api.get(`/goals/${userid}/${goalid}`)
+            .expect(200)
+            .end((err, res) => {
+                if (err) {
+                    console.log(err);
+                    expect.fail();
+                }
+                expect(res.body.title).to.equal("get good grades in school");
+                expect(res.body.priority).to.equal("1");
+                expect(res.body.createdOn).to.exist;
+                done();
+            });
+    });
+
+    it("gets both goals", (done) => {
+        api.get(`/goals/${userid}`)
+            .expect(200)
+            .end((err, res) => {
+                if (err) {
+                    console.log(err);
+                    expect.fail();
+                }
+                expect(res.body).to.have.length(2);
+                done();
+            });
+    });
+
     // SECTION - Bug / Error handling part of test
 
     let fakeid = "5ecf18b6c6ecf6c00c";
     let invalid = "5ecf18ecf6c00c";
 
-    it("creates a goal for an invalid user", (done) => {
+    it("creates a goal for an fake user", (done) => {
         body = {
             title: "become a chef",
             priority: "1",
@@ -86,7 +166,7 @@ describe("create a goal and then fetch it", () => {
         api.post(`/goals/${invalid}`).type("form").send(body).expect(400, done);
     });
 
-    it("fetches a goal with an invalid user", (done) => {
+    it("fetches a goal with an fake user", (done) => {
         api.get(`/goals/${fakeid}/${goalid}`)
             .type("form")
             .send(body)
@@ -112,6 +192,14 @@ describe("create a goal and then fetch it", () => {
             .type("form")
             .send(body)
             .expect(400, done);
+    });
+
+    it("fetches all goals with an fake user", (done) => {
+        api.get(`/goals/${fakeid}`).type("form").send(body).expect(400, done);
+    });
+
+    it("fetches all goals with an invalid user id", (done) => {
+        api.get(`/goals/${invalid}`).type("form").send(body).expect(400, done);
     });
 
     // TODO - Delete created user
