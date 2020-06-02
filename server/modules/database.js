@@ -85,6 +85,26 @@ exports.insertTaskList = (userid, taskList) => {
     });
 };
 
+// Fetches all task lists for the user based on the user id
+exports.fetchAllTaskLists = (userid) => {
+    let query = {
+        _id: userid,
+    };
+    return new Promise((resolve, reject) => {
+        usersCol.findOne(query, (err, res) => {
+            if (err) {
+                reject(err);
+            } else {
+                if (res == null) {
+                    reject("No user matches with the passed in id");
+                    return;
+                }
+                resolve(res.tasklists);
+            }
+        });
+    });
+};
+
 // Fetches a tasklist from the DB
 exports.fetchTaskList = (userid, listid) => {
     let query = {

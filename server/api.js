@@ -10,9 +10,15 @@ const saltRounds = 10;
 let ObjectID = require("mongodb").ObjectID;
 let app = express();
 const DB = require(path.join(__dirname, "modules", "database.js"));
+const cors = require("cors");
 
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(express.json());
+app.use(
+    cors({
+        origin: ["http://localhost:3000"],
+    })
+);
 
 /* -------------------------------------------------------------------------- */
 /*                                  Endpoints                                 */
@@ -110,6 +116,7 @@ app.post("/tasks/list/:userid", async (req, res) => {
         res.status(code).send("a valid userid must be set as a url parameter");
         return;
     }
+
     userid = new ObjectID(userid);
     let list = {
         _id: new ObjectID(),
@@ -136,6 +143,39 @@ app.post("/tasks/list/:userid", async (req, res) => {
         res.status(500).send("unexpected error");
     }
 });
+// !SECTION
+
+// SECTION - FETCH ALL TASK LISTS
+// Fetch all task lists
+app.get("/tasks/list/:userid", async (req, res) => {
+    let userid = req.params.userid;
+    let code = 400;
+    let events = [];
+    if (!validID(userid)) {
+        res.status(code).send("a valid userid must be set as a url parameter");
+        return;
+    }
+    userid = new ObjectID(userid);
+
+    await DB.fetchAllTaskLists(userid)
+        .then((res) => {
+            events = res;
+            code = res ? 200 : 400;
+        })
+        .catch((err) => {
+            console.error(err);
+            code = 400;
+        });
+
+    if (code == 200) {
+        res.status(code).send(events);
+    } else {
+        res.status(code).send(
+            "Could not find a match to given userid in the DB. Or else check databse connection"
+        );
+    }
+}); // TODO - Needs Testing
+
 // !SECTION
 
 // SECTION - FETCH TASK LIST
@@ -175,6 +215,7 @@ app.get("/tasks/list/:userid/:listid", async (req, res) => {
         );
     }
 });
+
 // !SECTION
 
 // SECTION - CREATE TASK
@@ -224,6 +265,7 @@ app.post("/tasks/:userid/:listid", async (req, res) => {
 // TODO - Delete a tasklist
 // TODO - Update a tasklist's title
 // TODO - Fetch a task
+// TODO - Fetch all task lists
 // TODO - Delete a task
 // TODO - Update a task
 
