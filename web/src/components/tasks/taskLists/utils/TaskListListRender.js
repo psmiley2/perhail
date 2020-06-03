@@ -3,7 +3,7 @@ import React from "react";
 import { useDispatch } from "react-redux";
 import { updateCurrentTaskList } from "../../../../actions";
 
-export default function TaskListRender({ lists }) {
+export default function TaskListListRender({ lists }) {
     const dispatch = useDispatch();
 
     const handleClick = (list) => {

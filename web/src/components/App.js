@@ -7,8 +7,8 @@ import NavBar from "./NavBar";
 export default function App() {
     return (
         <div>
-            <NavBar />
             <Router history={history}>
+                <NavBar />
                 <div>
                     <Switch>
                         <Route path="/" exact component={Dashboard} />

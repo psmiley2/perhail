@@ -98,9 +98,53 @@ app.get("/users/:userid", async (req, res) => {
 });
 // !SECTION
 
+// SECTION - FETCH USER
+// Fetch an existing user
+app.post("/login", async (req, res) => {
+    let user;
+    let code = 200;
+    let email = req.body.email;
+    email = email.replace(/ /g, ""); // Strip white spaces
+    let password = req.body.password;
+
+    await DB.fetchUserByEmail(email)
+        .then((res) => {
+            user = res;
+            code = res ? 200 : 400;
+        })
+        .catch((err) => {
+            console.error(err);
+            code = 500;
+        });
+    if (code == 400) {
+        res.status(code).send("could not find a user with that email address");
+        return;
+    }
+
+    await bcrypt
+        .compare(password, user.userinfo.hash)
+        .then((success) => {
+            if (!success) {
+                code = 403;
+            }
+        })
+        .catch((err) => {
+            console.error(err);
+        });
+
+    if (code == 403) {
+        res.status(code).send("invalid login credentials");
+        return;
+    }
+
+    res.status(code).send(user);
+    // TODO - Make this more legitamate
+    // TODO - Make some tests
+});
+// !SECTION
+
 // TODO - Update Email
 // TODO - Reset / Recover Password
-// TODO - Legitimate authentication
 
 // !SECTION
 

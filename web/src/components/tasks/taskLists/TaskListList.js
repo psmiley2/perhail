@@ -1,16 +1,16 @@
 import React from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchTaskLists } from "../../../actions";
-import TaskListRender from "./utils/TaskListRender";
+import TaskListListRender from "./utils/TaskListListRender";
 
 export default function TaskListList() {
     const dispatch = useDispatch();
-    let placeholderid = "5ed04597ac20955958395022";
-    dispatch(fetchTaskLists(placeholderid));
     let lists = useSelector((state) => state.task.lists);
+    let userID = useSelector((state) => state.user.id);
+    dispatch(fetchTaskLists(userID));
     return (
         <div>
-            <TaskListRender lists={lists} />
+            <TaskListListRender lists={lists} />
         </div>
     );
 }

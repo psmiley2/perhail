@@ -1,12 +1,33 @@
 import axios from "axios";
-import history from "../history";
 import {
+    CREATE_TASK,
     CREATE_TASK_LIST,
     FETCH_TASK_LIST,
     FETCH_TASK_LISTS,
+    LOGIN,
     UPDATE_CURRENT_TASK_LIST,
 } from "./types";
 
+// SECTION - Login
+export const login = (email, password) => async (dispatch) => {
+    let body = {
+        email: email,
+        password: password,
+    };
+    let response;
+    await axios
+        .post("http://localhost:8080/login", body)
+        .then((res) => {
+            response = res;
+        })
+        .catch((err) => {
+            console.error(err);
+        });
+
+    dispatch({ type: LOGIN, payload: response.data });
+};
+
+// SECTION - Task Lists
 export const fetchTaskLists = (userid) => async (dispatch) => {
     let response;
     await axios
@@ -31,7 +52,6 @@ export const fetchTaskList = (userid, listid) => async (dispatch) => {
         .catch((err) => {
             console.error(err);
         });
-
     dispatch({ type: FETCH_TASK_LIST, payload: response.data });
 };
 
@@ -39,10 +59,10 @@ export const updateCurrentTaskList = (taskListID) => (dispatch) => {
     dispatch({ type: UPDATE_CURRENT_TASK_LIST, payload: taskListID });
 };
 
-export const createTaskList = (userid, userInfo) => async (dispatch) => {
+export const createTaskList = (userid, listInfo) => async (dispatch) => {
     let response;
     await axios
-        .post(`http://localhost:8080/tasks/list/${userid}`, userInfo)
+        .post(`http://localhost:8080/tasks/list/${userid}`, listInfo)
         .then((res) => {
             response = res;
         })
@@ -51,5 +71,22 @@ export const createTaskList = (userid, userInfo) => async (dispatch) => {
         });
 
     dispatch({ type: CREATE_TASK_LIST, payload: response.data });
-    history.push("/");
+};
+
+// SECTION - Tasks
+
+export const createTask = (userid, taskListID, taskInfo) => async (
+    dispatch
+) => {
+    let response;
+    await axios
+        .post(`http://localhost:8080/tasks/${userid}/${taskListID}`, taskInfo)
+        .then((res) => {
+            response = res;
+        })
+        .catch((err) => {
+            console.error(err);
+        });
+
+    dispatch({ type: CREATE_TASK, payload: response.data });
 };

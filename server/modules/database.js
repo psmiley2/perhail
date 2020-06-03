@@ -63,6 +63,21 @@ exports.fetchUser = (userid) => {
     });
 };
 
+exports.fetchUserByEmail = (email) => {
+    let query = {
+        "userinfo.email": email,
+    };
+    return new Promise((resolve, reject) => {
+        usersCol.findOne(query, (err, res) => {
+            if (err) {
+                reject(err);
+            } else {
+                resolve(res);
+            }
+        });
+    });
+};
+
 /* ---------------------------------- Tasks --------------------------------- */
 // SECTION - TASKS
 // Adds a new task list for the user with the given id

@@ -1,20 +1,20 @@
 import TextField from "@material-ui/core/TextField";
 import React, { useState } from "react";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { createTaskList } from "../../../actions/index";
 
 export default function TaskListAdd() {
     const dispatch = useDispatch();
     const [taskList, setTaskList] = useState("");
+    let userID = useSelector((state) => state.user.id);
 
     const handleSubmit = (e, taskList) => {
         e.preventDefault();
 
-        let placeholderid = "5ed04597ac20955958395022";
         let body = {
             title: taskList,
         };
-        dispatch(createTaskList(placeholderid, { title: taskList }));
+        dispatch(createTaskList(userID, { title: taskList }));
         setTaskList("");
     };
 

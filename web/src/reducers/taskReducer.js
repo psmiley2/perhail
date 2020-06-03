@@ -1,4 +1,5 @@
 import {
+    CREATE_TASK,
     CREATE_TASK_LIST,
     FETCH_TASK_LIST,
     FETCH_TASK_LISTS,
@@ -7,11 +8,12 @@ import {
 
 let initialState = {
     lists: [],
-    currentList: "",
+    currentList: {},
 };
 
 export default (state = initialState, action) => {
     switch (action.type) {
+        // SECTION - Task Lists
         case FETCH_TASK_LISTS:
             return { ...state, lists: action.payload };
         case FETCH_TASK_LIST:
@@ -25,6 +27,14 @@ export default (state = initialState, action) => {
             return {
                 ...state,
                 currentList: action.payload,
+            };
+        // SECTION - Tasks
+        case CREATE_TASK:
+            let newList = { ...state.currentList };
+            newList.tasks.push(action.payload);
+            return {
+                ...state,
+                currentList: newList,
             };
         default:
             return state;

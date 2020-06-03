@@ -1,17 +1,20 @@
 import TextField from "@material-ui/core/TextField";
 import React, { useState } from "react";
-import PostResource from "../../common/PostResource";
-export default function TaskAdd() {
-    const [task, setTask] = useState("");
+import { useDispatch, useSelector } from "react-redux";
+import { createTask } from "../../../actions";
 
-    const handleSubmit = (e, task) => {
+export default function TaskAdd({ list }) {
+    const [task, setTask] = useState("");
+    const dispatch = useDispatch();
+    let userID = useSelector((state) => state.user.id);
+
+    const handleSubmit = async (e, task) => {
         e.preventDefault();
 
-        let placeholderid = "5ed04597ac20955958395022";
         let body = {
             title: task,
         };
-        PostResource(`tasks/list/${placeholderid}`, body);
+        dispatch(createTask(userID, list._id, body));
         setTask("");
     };
 
