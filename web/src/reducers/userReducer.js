@@ -3,6 +3,7 @@ import { LOGIN } from "../actions/types";
 let initialState = {
     id: null,
     email: null,
+    currentlyViewing: null,
 };
 
 export default (state = initialState, action) => {

@@ -7,7 +7,7 @@ export default function TaskList({ list }) {
         return <div>Loading...</div>;
     }
 
-    if (list._id == undefined) {
+    if (list._id === undefined) {
         return <div>Select a task list</div>;
     }
 
@@ -15,9 +15,7 @@ export default function TaskList({ list }) {
         <List>
             {list.tasks.map((list, index) => (
                 <ListItem key={index}>
-                    <ListItemText button dense>
-                        {list.title}
-                    </ListItemText>
+                    <ListItemText>{list.title}</ListItemText>
                 </ListItem>
             ))}
         </List>

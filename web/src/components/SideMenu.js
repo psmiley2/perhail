@@ -4,8 +4,9 @@ import ExpandMoreIcon from "@material-ui/icons/ExpandMore";
 import TreeItem from "@material-ui/lab/TreeItem";
 import TreeView from "@material-ui/lab/TreeView";
 import React from "react";
+import history from "../history";
+import Goals from "./goals/Goals";
 import TaskLists from "./tasks/taskLists/TaskLists";
-
 const useStyles = makeStyles({
     root: {
         height: 500,
@@ -23,23 +24,14 @@ export default function SideMenu() {
             defaultCollapseIcon={<ExpandMoreIcon />}
             defaultExpandIcon={<ChevronRightIcon />}
         >
-            <TreeItem nodeId="1" label="Goals">
-                <TreeItem nodeId="2" label="Tasls" />
-                <TreeItem nodeId="3" label="Chrome" />
-                <TreeItem nodeId="4" label="Webstorm" />
-            </TreeItem>
-            <TreeItem nodeId="100" label="Tracks">
-                <TreeItem nodeId="2" label="Tasls" />
-                <TreeItem nodeId="3" label="Chrome" />
-                <TreeItem nodeId="4" label="Webstorm" />
-            </TreeItem>
-            <TaskLists />
-            <TreeItem nodeId="11" label="Event Lists">
-                <TreeItem nodeId="12" label="src">
-                    <TreeItem nodeId="13" label="index.js" />
-                    <TreeItem nodeId="14" label="tree-view.js" />
-                </TreeItem>
-            </TreeItem>
+            <TreeItem
+                onClick={() => history.push("/events")}
+                nodeId="1"
+                label="Events"
+            ></TreeItem>
+            <TreeItem nodeId="2" label="Tracks"></TreeItem>
+            <TaskLists nodeId={`${3}`} />
+            <Goals nodeId={`${4}`} />
         </TreeView>
     );
 }

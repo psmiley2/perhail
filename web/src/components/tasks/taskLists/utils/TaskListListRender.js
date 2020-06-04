@@ -2,12 +2,13 @@ import TreeItem from "@material-ui/lab/TreeItem";
 import React from "react";
 import { useDispatch } from "react-redux";
 import { updateCurrentTaskList } from "../../../../actions";
-
+import history from "../../../../history";
 export default function TaskListListRender({ lists }) {
     const dispatch = useDispatch();
 
     const handleClick = (list) => {
         dispatch(updateCurrentTaskList(list));
+        history.push("/tasks");
     };
 
     if (lists == null) {
@@ -18,10 +19,9 @@ export default function TaskListListRender({ lists }) {
         <>
             {lists.map((list, index) => (
                 <TreeItem
-                    nodeId={100 + index}
+                    key={index}
+                    nodeId={`${index}`} // REVIEW - This needs to be fixed
                     onClick={() => handleClick(list)}
-                    button
-                    dense
                     label={list.title}
                 ></TreeItem>
             ))}

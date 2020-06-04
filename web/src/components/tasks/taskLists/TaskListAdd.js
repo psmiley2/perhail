@@ -8,18 +8,15 @@ export default function TaskListAdd() {
     const [taskList, setTaskList] = useState("");
     let userID = useSelector((state) => state.user.id);
 
-    const handleSubmit = (e, taskList) => {
+    const handleSubmit = (e) => {
         e.preventDefault();
 
-        let body = {
-            title: taskList,
-        };
         dispatch(createTaskList(userID, { title: taskList }));
         setTaskList("");
     };
 
     return (
-        <form onSubmit={(e) => handleSubmit(e, taskList)}>
+        <form onSubmit={(e) => handleSubmit(e)}>
             <TextField
                 id="task-list-add"
                 type="text"

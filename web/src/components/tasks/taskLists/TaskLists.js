@@ -3,10 +3,10 @@ import React from "react";
 import TaskListAdd from "./TaskListAdd";
 import TaskListList from "./TaskListList";
 
-export default function TaskLists() {
+export default function TaskLists({ nodeId }) {
     return (
         <div>
-            <TreeItem nodeId="100" label="Task Lists">
+            <TreeItem nodeId={nodeId} label="Task Lists">
                 <TaskListAdd />
                 <TaskListList />
             </TreeItem>
