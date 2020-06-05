@@ -5,6 +5,7 @@ const saltRounds = 12;
 const path = require("path");
 let ObjectID = require("mongodb").ObjectID;
 const DB = require(path.join(__dirname, "../", "modules", "database.js"));
+const { initSession, isEmail } = require("../utils/utils");
 
 // SECTION - CREATE USER
 // Create a new user
@@ -74,8 +75,11 @@ router.get("/:userid", async (req, res) => {
 });
 // !SECTION
 
-// SECTION - FETCH USER
-// Fetch an existing user
+// SECTION - RESGISTER USER
+router.post("/register", async (req, res) => {});
+
+// SECTION - LOGIN USER
+// Login a user
 router.post("/login", async (req, res) => {
     let user;
     let code = 200;

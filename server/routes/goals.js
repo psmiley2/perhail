@@ -145,5 +145,12 @@ router.get("/:userid/:goalid", async (req, res) => {
 // !SECTION
 // TODO - DELETE GOAL
 // TODO - UPDATE GOAL
+const validID = (id) => {
+    if (id == undefined || id.length != 24) {
+        return false;
+    }
+    return true;
+    // More validation
+};
 
 module.exports = router;

@@ -165,5 +165,12 @@ router.post("/:userid/:listid", async (req, res) => {
 // TODO - Fetch all task lists
 // TODO - Delete a task
 // TODO - Update a task
+const validID = (id) => {
+    if (id == undefined || id.length != 24) {
+        return false;
+    }
+    return true;
+    // More validation
+};
 
 module.exports = router;

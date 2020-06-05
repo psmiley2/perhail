@@ -3,7 +3,6 @@ const router = express.Router();
 const path = require("path");
 let ObjectID = require("mongodb").ObjectID;
 const DB = require(path.join(__dirname, "../", "modules", "database.js"));
-
 // SECTION - CREATE EVENTS
 // Add a new event
 router.post("/:userid", async (req, res) => {
@@ -113,5 +112,13 @@ router.get("/:userid/:eventid", async (req, res) => {
 // !SECTION
 // TODO - DELETE EVENT
 // TODO - UPDATE EVENT
+
+const validID = (id) => {
+    if (id == undefined || id.length != 24) {
+        return false;
+    }
+    return true;
+    // More validation
+};
 
 module.exports = router;

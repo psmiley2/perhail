@@ -112,5 +112,12 @@ router.get("/:userid/:preferenceid", async (req, res) => {
 // !SECTION
 // TODO - DELETE PREFERENCE
 // TODO - UPDATE PREFERENCE
+const validID = (id) => {
+    if (id == undefined || id.length != 24) {
+        return false;
+    }
+    return true;
+    // More validation
+};
 
 module.exports = router;
