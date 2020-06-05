@@ -1,11 +1,15 @@
 const express = require("express");
-const bcrypt = require("bcrypt");
+const bcrypt = require("bcryptjs");
 const router = express.Router();
-const saltRounds = 12;
+const passport = require("passport");
 const path = require("path");
 let ObjectID = require("mongodb").ObjectID;
 const DB = require(path.join(__dirname, "../", "modules", "database.js"));
-const { initSession, isEmail } = require("../utils/utils");
+const saltRounds = 12;
+
+// Load User model
+const User = require("../models/User");
+const { ensureAuthenticated, forwardAuthenticated } = require("../config/auth");
 
 // SECTION - CREATE USER
 // Create a new user
@@ -49,7 +53,7 @@ router.post("/", async (req, res) => {
 
 // SECTION - FETCH USER
 // Fetch an existing user
-router.get("/:userid", async (req, res) => {
+router.get("/find/:userid", async (req, res) => {
     let user;
     let code = 400;
     let userid = req.params.userid;
@@ -76,52 +80,79 @@ router.get("/:userid", async (req, res) => {
 // !SECTION
 
 // SECTION - RESGISTER USER
-router.post("/register", async (req, res) => {});
+router.post("/register", async (req, res) => {
+    const { email, password } = req.body;
+    let errors = [];
+
+    if (!email || !password) {
+        errors.push({ msg: "Please enter all fields" });
+    }
+
+    if (password.length < 6) {
+        errors.push({ msg: "Password must be at least 6 characters" });
+    }
+
+    if (errors.length > 0) {
+        res.status(400).send(errors);
+        return;
+    }
+
+    await User.findOne({ "userInfo.email": email }).then((user) => {
+        if (user) {
+            errors.push({ msg: "Email already exists" });
+        } else {
+            const newUser = new User({
+                userInfo: {
+                    email,
+                    password,
+                },
+            });
+
+            bcrypt.genSalt(saltRounds, (err, salt) => {
+                bcrypt.hash(newUser.userInfo.password, salt, (err, hash) => {
+                    if (err) throw err;
+                    newUser.userInfo.password = hash;
+                    user = newUser.save().catch((err) => console.error(err));
+                });
+            });
+        }
+    });
+
+    if (errors.length > 0) {
+        res.status(400).send(errors);
+        return;
+    } else {
+        res.status(201).send("Successfully created");
+    }
+});
+
+router.get("/s", (req, res) => {
+    res.send("logged in");
+});
+router.get("/f", (req, res) => {
+    res.send("log in failed");
+});
 
 // SECTION - LOGIN USER
 // Login a user
-router.post("/login", async (req, res) => {
-    let user;
-    let code = 200;
-    let email = req.body.email;
-    email = email.replace(/ /g, ""); // Strip white spaces
-    let password = req.body.password;
+router.post("/login", (req, res, next) => {
+    passport.authenticate("local", {
+        successRedirect: "/users/s",
+        failureRedirect: "/users/f",
+        failureFlash: false,
+    })(req, res, next);
 
-    await DB.fetchUserByEmail(email)
-        .then((res) => {
-            user = res;
-            code = res ? 200 : 400;
-        })
-        .catch((err) => {
-            console.error(err);
-            code = 500;
-        });
-    if (code == 400) {
-        res.status(code).send("could not find a user with that email address");
-        return;
-    }
-
-    await bcrypt
-        .compare(password, user.userinfo.hash)
-        .then((success) => {
-            if (!success) {
-                code = 403;
-            }
-        })
-        .catch((err) => {
-            console.error(err);
-        });
-
-    if (code == 403) {
-        res.status(code).send("invalid login credentials");
-        return;
-    }
-
-    res.status(code).send(user);
-    // TODO - Make this more legitamate
-    // TODO - Make some tests
+    // // TODO - Make some tests
 });
 // !SECTION
+
+// Welcome Page
+router.get("/", forwardAuthenticated, (req, res) => res.send("welcome"));
+
+// Dashboard
+router.get("/dashboard", ensureAuthenticated, (req, res) => {
+    res.send("hello ");
+});
 
 // TODO - Update Email
 // TODO - Reset / Recover Password

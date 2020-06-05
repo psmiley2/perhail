@@ -4,41 +4,45 @@ const path = require("path");
 let ObjectID = require("mongodb").ObjectID;
 const DB = require(path.join(__dirname, "../", "modules", "database.js"));
 
+const { TaskList } = require("../models/Task");
+const User = require("../models/User");
+
 // SECTION - CREATE TASK LIST
 // Create a new list of tasks
 router.post("/list/:userid", async (req, res) => {
     let userid = req.params.userid;
-    let code = 400;
     if (userid == undefined || userid.length != 24) {
-        res.status(code).send("a valid userid must be set as a url parameter");
+        res.status(400).send("a valid userid must be set as a url parameter");
         return;
     }
 
-    userid = new ObjectID(userid);
-    let list = {
-        _id: new ObjectID(),
-        title: req.body.title, // TODO - if no title is given make it ""
-        tasks: [],
-    };
+    let errors = [];
+    const newList = new TaskList({
+        title: req.body.title,
+    });
 
-    await DB.insertTaskList(userid, list)
+    await User.findByIdAndUpdate(userid, {
+        $push: { taskLists: newList },
+    })
         .then((res) => {
-            if (res >= 1) {
-                code = 201;
+            if (res) {
+                // Sets newList to the list we just created
+                newList = res.taskLists[res.taskLists.length - 1];
             } else {
-                code = 400;
+                errors.push("Could not find a user with the given userid");
             }
         })
-        .catch((err) => console.error(err));
-    if (code == 201) {
-        res.status(code).send(list);
-    } else if (code == 400) {
-        res.status(code).send(
-            "could not find a match in the database based on passed in ID"
-        );
-    } else {
-        res.status(500).send("unexpected error");
+        .catch((err) => {
+            console.log("error: ", err);
+        });
+
+    if (errors.length > 0) {
+        res.status(400).send(errors);
+        return;
     }
+
+    // No errors
+    res.status(201).send(newList);
 });
 // !SECTION
 
