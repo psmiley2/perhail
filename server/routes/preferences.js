@@ -3,40 +3,45 @@ const router = express.Router();
 const path = require("path");
 let ObjectID = require("mongodb").ObjectID;
 const DB = require(path.join(__dirname, "../", "modules", "database.js"));
+const User = require("../models/User");
 
 // SECTION - CREATE PREFERENCES
 // Add a new preference
 router.post("/:userid", async (req, res) => {
     let userid = req.params.userid;
-    let code = 400;
+    let errors = [];
     if (!validID(userid)) {
-        res.status(code).send("a valid userid must be set as a url parameter");
+        errors.push("a valid userid must be set as a url parameter");
+    }
+
+    if (errors.length > 0) {
+        res.status(400).send(errors);
         return;
     }
-    userid = new ObjectID(userid);
-    let preference = {
-        _id: new ObjectID(),
-        title: req.body.title, // TODO - if no title is given make it ""
+
+    let newPreference = {
+        title: req.body.title,
     };
 
-    await DB.insertPreference(userid, preference)
+    await User.findByIdAndUpdate(userid, {
+        $push: { preferences: newPreference },
+    })
         .then((res) => {
-            if (res >= 1) {
-                code = 201;
-            } else {
-                code = 400;
+            if (!res) {
+                errors.push(
+                    "could not find a user in the database with the given user id"
+                );
             }
         })
         .catch((err) => console.error(err));
-    if (code == 201) {
-        res.status(code).send(preference);
-    } else if (code == 400) {
-        res.status(code).send(
-            "could not find a match in the database based on passed in ID"
-        );
-    } else {
-        res.status(500).send("unexpected error");
+
+    if (errors.length > 0) {
+        res.status(400).send(errors);
+        return;
     }
+
+    // No errros
+    res.status(201).send(newPreference);
 });
 // !SECTION
 

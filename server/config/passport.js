@@ -11,7 +11,7 @@ module.exports = function (passport) {
             (email, password, done) => {
                 // Match user
                 User.findOne({
-                    "userinfo.email": email,
+                    "userInfo.email": email,
                 }).then((user) => {
                     if (!user) {
                         return done(null, false, {
@@ -20,16 +20,20 @@ module.exports = function (passport) {
                     }
 
                     // Match password
-                    bcrypt.compare(password, user.password, (err, isMatch) => {
-                        if (err) throw err;
-                        if (isMatch) {
-                            return done(null, user);
-                        } else {
-                            return done(null, false, {
-                                message: "Password incorrect",
-                            });
+                    bcrypt.compare(
+                        password,
+                        user.userInfo.password,
+                        (err, isMatch) => {
+                            if (err) throw err;
+                            if (isMatch) {
+                                return done(null, user);
+                            } else {
+                                return done(null, false, {
+                                    message: "Password incorrect",
+                                });
+                            }
                         }
-                    });
+                    );
                 });
             }
         )

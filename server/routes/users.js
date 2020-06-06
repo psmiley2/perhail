@@ -2,80 +2,42 @@ const express = require("express");
 const bcrypt = require("bcryptjs");
 const router = express.Router();
 const passport = require("passport");
-const path = require("path");
-let ObjectID = require("mongodb").ObjectID;
-const DB = require(path.join(__dirname, "../", "modules", "database.js"));
 const saltRounds = 12;
 
 // Load User model
 const User = require("../models/User");
 const { ensureAuthenticated, forwardAuthenticated } = require("../config/auth");
 
-// SECTION - CREATE USER
-// Create a new user
-router.post("/", async (req, res) => {
-    // TODO - Validation
-    let userInfo = {
-        email: req.body.email,
-        hash: "",
-    };
-    let code = 400;
-    const hash = bcrypt.hashSync(req.body.password, saltRounds);
-    userInfo.hash = hash;
-
-    let user = {
-        userinfo: userInfo,
-        tasklists: [],
-        preferences: [],
-        tracks: [],
-        goals: [],
-        events: [],
-    };
-
-    await DB.insertUser(user)
-        .then((res) => {
-            if (res == 1) {
-                code = 201;
-            } else {
-                code == 500;
-            }
-        })
-        .catch((err) => console.error(err));
-    if (code == 201) {
-        res.status(code).send(user);
-    } else {
-        res.status(code).send(
-            "Unexpected error occured. Check Database connection"
-        );
-    }
-});
-// !SECTION
-
 // SECTION - FETCH USER
 // Fetch an existing user
 router.get("/find/:userid", async (req, res) => {
     let user;
-    let code = 400;
     let userid = req.params.userid;
+    let errors = [];
 
-    if (userid.length != 24) {
-        res.status(code).send("invalid user id");
+    if (userid == undefined || userid.length != 24) {
+        res.status(400).send("a valid userid must be set as a url parameter");
         return;
     }
 
-    userid = new ObjectID(userid);
-
-    await DB.fetchUser(userid)
+    await User.findById(userid)
         .then((res) => {
-            user = res;
-            code = res ? 200 : 400;
+            if (res) {
+                // User was found
+                user = res;
+            } else {
+                errors.push("no user found for the given id");
+            }
         })
         .catch((err) => {
             console.error(err);
-            code = 500;
         });
+    if (errors.length > 0) {
+        res.status(400).send(errors);
+        return;
+    }
 
-    res.status(code).send(user);
+    res.status(200).send(user);
 });
 // !SECTION
 
@@ -85,11 +47,11 @@ router.post("/register", async (req, res) => {
     let errors = [];
 
     if (!email || !password) {
-        errors.push({ msg: "Please enter all fields" });
+        errors.push("Please enter all fields");
     }
 
     if (password.length < 6) {
-        errors.push({ msg: "Password must be at least 6 characters" });
+        errors.push("Password must be at least 6 characters");
     }
 
     if (errors.length > 0) {
@@ -97,38 +59,70 @@ router.post("/register", async (req, res) => {
         return;
     }
 
-    await User.findOne({ "userInfo.email": email }).then((user) => {
-        if (user) {
-            errors.push({ msg: "Email already exists" });
-        } else {
-            const newUser = new User({
-                userInfo: {
-                    email,
-                    password,
-                },
-            });
+    await User.findOne({ "userInfo.email": email })
+        .then((user) => {
+            if (user) {
+                errors.push({ msg: "Email already exists" });
+            }
+        })
+        .catch((err) => {
+            console.error(err);
+        });
 
-            bcrypt.genSalt(saltRounds, (err, salt) => {
-                bcrypt.hash(newUser.userInfo.password, salt, (err, hash) => {
-                    if (err) throw err;
-                    newUser.userInfo.password = hash;
-                    user = newUser.save().catch((err) => console.error(err));
-                });
-            });
-        }
+    if (errors.length > 0) {
+        res.status(400).send(errors);
+        return;
+    }
+
+    let hashedPassword = "";
+    let newUser;
+    let salt;
+
+    await bcrypt
+        .genSalt(saltRounds)
+        .then((s) => {
+            salt = s;
+        })
+        .catch((err) => console.error(err));
+
+    await bcrypt
+        .hash(password, salt)
+        .then((hash) => {
+            console.log(hash);
+            hashedPassword = hash;
+        })
+        .catch((err) => console.error(err));
+
+    newUser = new User({
+        userInfo: {
+            email,
+            password: hashedPassword,
+        },
     });
 
+    await newUser
+        .save()
+        .then((user) => {
+            newUser = user;
+        })
+        .catch((err) => {
+            console.error(err);
+        });
+
     if (errors.length > 0) {
         res.status(400).send(errors);
         return;
-    } else {
-        res.status(201).send("Successfully created");
     }
+
+    // No errors
+    res.status(201).send(newUser);
 });
 
+// TEMP ROUTE
 router.get("/s", (req, res) => {
     res.send("logged in");
 });
+// TEMP ROUTE
 router.get("/f", (req, res) => {
     res.send("log in failed");
 });
@@ -137,12 +131,12 @@ router.get("/f", (req, res) => {
 // Login a user
 router.post("/login", (req, res, next) => {
     passport.authenticate("local", {
-        successRedirect: "/users/s",
+        successRedirect: "/users/s", // TODO - change these redirects
         failureRedirect: "/users/f",
         failureFlash: false,
     })(req, res, next);
 
-    // // TODO - Make some tests
+    // TODO - Make some tests
 });
 // !SECTION
 

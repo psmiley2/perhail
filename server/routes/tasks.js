@@ -1,8 +1,6 @@
 const express = require("express");
 const router = express.Router();
 const path = require("path");
-let ObjectID = require("mongodb").ObjectID;
-const DB = require(path.join(__dirname, "../", "modules", "database.js"));
 
 const { TaskList } = require("../models/Task");
 const User = require("../models/User");
@@ -17,17 +15,49 @@ router.post("/list/:userid", async (req, res) => {
     }
 
     let errors = [];
-    const newList = new TaskList({
+    let newList = new TaskList({
         title: req.body.title,
     });
 
+    // Update DB
     await User.findByIdAndUpdate(userid, {
         $push: { taskLists: newList },
     })
         .then((res) => {
+            if (!res) {
+                errors.push("Could not find a user with the given userid");
+            }
+        })
+        .catch((err) => {
+            console.log("error: ", err);
+        });
+
+    if (errors.length > 0) {
+        res.status(400).send(errors);
+        return;
+    }
+
+    // No errors
+    res.status(201);
+});
+// !SECTION
+
+// SECTION - FETCH ALL TASK LISTS
+// Fetch all task lists
+router.get("/list/:userid", async (req, res) => {
+    let userid = req.params.userid;
+    let errors = [];
+    let lists = [];
+    if (userid == undefined || userid.length != 24) {
+        res.status(400).send("a valid userid must be set as a url parameter");
+        return;
+    }
+
+    // Query DB
+    await User.findById(userid)
+        .then((res) => {
             if (res) {
-                // Sets newList to the list we just created
-                newList = res.taskLists[res.taskLists.length - 1];
+                lists = res.taskLists;
             } else {
                 errors.push("Could not find a user with the given userid");
             }
@@ -42,124 +72,114 @@ router.post("/list/:userid", async (req, res) => {
     }
 
     // No errors
-    res.status(201).send(newList);
+    res.status(200).send(lists);
+    // TODO - Needs Testing
 });
-// !SECTION
-
-// SECTION - FETCH ALL TASK LISTS
-// Fetch all task lists
-router.get("/list/:userid", async (req, res) => {
-    let userid = req.params.userid;
-    let code = 400;
-    let events = [];
-    if (!validID(userid)) {
-        res.status(code).send("a valid userid must be set as a url parameter");
-        return;
-    }
-    userid = new ObjectID(userid);
-
-    await DB.fetchAllTaskLists(userid)
-        .then((res) => {
-            events = res;
-            code = res ? 200 : 400;
-        })
-        .catch((err) => {
-            console.error(err);
-            code = 400;
-        });
-
-    if (code == 200) {
-        res.status(code).send(events);
-    } else {
-        res.status(code).send(
-            "Could not find a match to given userid in the DB. Or else check databse connection"
-        );
-    }
-}); // TODO - Needs Testing
-
 // !SECTION
 
 // SECTION - FETCH TASK LIST
 // Fetch a tasklist
 router.get("/list/:userid/:listid", async (req, res) => {
     let user;
-    let code = 200;
-    let userid = req.params.userid;
-    let listid = req.params.listid;
+    let { userid, listid } = req.params;
+    let errors = [];
 
     if (userid == undefined || userid.length != 24) {
-        res.status(400).send("invalid user id");
-        return;
+        errors.push("invalid userid");
     }
     if (listid == undefined || listid.length != 24) {
-        res.status(400).send("invalid task id");
+        errors.push("invalid task id");
+    }
+
+    if (errors.length > 0) {
+        res.status(400).send(errors);
         return;
     }
 
-    userid = new ObjectID(userid);
+    let targetList = null;
 
-    await DB.fetchTaskList(userid, listid)
+    // Query DB
+    await User.findById(userid)
         .then((res) => {
-            user = res;
-            code = res ? 200 : 400;
+            if (res) {
+                // User is found
+                for (list of res.taskLists) {
+                    if (list._id == listid) {
+                        // List is found
+                        targetList = list;
+                    }
+                }
+                if (targetList == null) {
+                    errors.push(
+                        "no list was found for the given list id for this user"
+                    );
+                }
+            } else {
+                errors.push("no user was found with the given userid");
+            }
         })
         .catch((err) => {
             console.error(err);
-            code = 400;
         });
 
-    if (code == 200) {
-        res.status(code).send(user);
-    } else {
-        res.status(code).send(
-            "Could not find a match to given IDs in the DB. Or else check databse connection"
-        );
+    if (errors.length > 0) {
+        res.status(400).send(errors);
+        return;
     }
-});
 
+    // Else
+    res.status(200).send(targetList);
+});
 // !SECTION
 
 // SECTION - CREATE TASK
 // Create a new task
 router.post("/:userid/:listid", async (req, res) => {
-    let userid = req.params.userid;
-    let listid = req.params.listid;
-    let code = 400;
+    let { userid, listid } = req.params;
+    let errors = [];
     if (userid == undefined || userid.length != 24) {
-        res.status(code).send("a valid userid must be set as a url parameter");
-        return;
+        errors.push("a valid userid must be set as a url parameter");
     }
+
     if (listid == undefined || listid.length != 24) {
-        res.status(code).send("a valid userid must be set as a url parameter");
+        errors.push("a valid userid must be set as a url parameter");
+    }
+
+    if (errors.length > 0) {
+        res.status(400).send(errors);
         return;
     }
-    userid = new ObjectID(userid);
-    listid = new ObjectID(listid);
+
     let task = {
-        _id: new ObjectID(),
-        title: req.body.title, // TODO - if no title is given make it ""
-        createdOn: new Date(),
+        title: req.body.title,
         completed: false,
     };
 
-    await DB.insertTask(userid, listid, task)
+    let action = {
+        $push: { "taskLists.$[list].tasks": task },
+    };
+    let filter = {
+        arrayFilters: [{ "list._id": listid }],
+    };
+
+    let newTask = null;
+    await User.findByIdAndUpdate(userid, action, filter)
         .then((res) => {
-            if (res >= 1) {
-                code = 201;
-            } else {
-                code = 400;
+            if (!res) {
+                errors.push("no user was found with the given userid");
             }
         })
-        .catch((err) => console.error(err));
-    if (code == 201) {
-        res.status(code).send(task);
-    } else if (code == 400) {
-        res.status(code).send(
-            "could not find a match in the database based on passed in IDs"
-        );
-    } else {
-        res.status(500).send("unexpected error");
+        .catch((err) => {
+            console.error(err);
+        });
+
+    if (errors.length > 0) {
+        res.status(400).send(errors);
+        return;
     }
+
+    // No errors
+    res.status(201).send(newTask);
 });
 // !SECTION
 
@@ -169,12 +189,5 @@ router.post("/:userid/:listid", async (req, res) => {
 // TODO - Fetch all task lists
 // TODO - Delete a task
 // TODO - Update a task
-const validID = (id) => {
-    if (id == undefined || id.length != 24) {
-        return false;
-    }
-    return true;
-    // More validation
-};
 
 module.exports = router;
