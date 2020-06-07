@@ -9,6 +9,7 @@ import {
     FETCH_TASK_LIST,
     FETCH_TASK_LISTS,
     LOGIN,
+    REGISTER,
     UPDATE_CURRENT_GOAL,
     UPDATE_CURRENT_TASK_LIST,
 } from "./types";
@@ -21,7 +22,7 @@ export const login = (email, password) => async (dispatch) => {
     };
     let response;
     await axios
-        .post("http://localhost:8080/login", body)
+        .post("http://localhost:8080/users/login", body)
         .then((res) => {
             response = res;
         })
@@ -30,6 +31,24 @@ export const login = (email, password) => async (dispatch) => {
         });
 
     dispatch({ type: LOGIN, payload: response.data });
+};
+
+export const register = (email, password) => async (dispatch) => {
+    let body = {
+        email: email,
+        password: password,
+    };
+    let response;
+    await axios
+        .post("http://localhost:8080/users/register", body)
+        .then((res) => {
+            response = res;
+        })
+        .catch((err) => {
+            console.error(err);
+        });
+
+    dispatch({ type: REGISTER, payload: response.data });
 };
 
 // SECTION - Task Lists

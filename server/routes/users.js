@@ -17,7 +17,12 @@ router.get("/find/:userid", async (req, res) => {
     let errors = [];
 
     if (userid == undefined || userid.length != 24) {
-        res.status(400).send("a valid userid must be set as a url parameter");
+        errors.push("a valid userid must be set as a url parameter");
+        return;
+    }
+
+    if (errors.length > 0) {
+        res.status(400).send(errors);
         return;
     }
 
@@ -123,23 +128,28 @@ router.post("/register", async (req, res) => {
     res.status(201).send(newUser);
 });
 
-// TEMP ROUTE
-router.get("/s", (req, res) => {
-    res.send("logged in");
-});
-// TEMP ROUTE
-router.get("/f", (req, res) => {
-    res.send("log in failed");
-});
-
 // SECTION - LOGIN USER
 // Login a user
-router.post("/login", (req, res, next) => {
-    passport.authenticate("local", {
-        successRedirect: "/users/s", // TODO - change these redirects
-        failureRedirect: "/users/f",
-        failureFlash: false,
-    })(req, res, next);
+router.post("/login", passport.authenticate("local"), async (req, res) => {
+    let userid = req.session.passport.user;
+    let errors = [];
+    let user;
+
+    if (userid == undefined || userid.length != 24) {
+        errors.push("the session is storing an invalid userid");
+        return;
+    }
+
+    if (errors.length > 0) {
+        res.status(400).send(errors);
+        return;
+    }
+    await User.findById(userid)
+        .then((u) => {
+            user = u;
+        })
+        .catch((err) => console.error(err));
+    res.status(200).send(user);
 
     // TODO - Make some tests
 });

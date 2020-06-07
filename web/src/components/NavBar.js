@@ -7,6 +7,8 @@ import Typography from "@material-ui/core/Typography";
 import GridOn from "@material-ui/icons/GridOn";
 import React from "react";
 import Login from "./auth/Login";
+import Register from "./auth/Register";
+
 const useStyles = makeStyles((theme) => ({
     root: {
         flexGrow: 1,
@@ -42,6 +44,7 @@ export default function ButtonAppBar() {
                         className={classes.title}
                     ></Typography>
                     <Login />
+                    <Register />
                 </Toolbar>
             </AppBar>
         </div>

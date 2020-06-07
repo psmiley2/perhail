@@ -5,6 +5,7 @@ export const CREATE_TASK = "CREATE_TASK";
 export const UPDATE_CURRENT_TASK_LIST = "UPDATE_CURRENT_TASK_LIST";
 export const CREATE_TASK_LIST = "CREATE_TASK_LIST";
 export const LOGIN = "LOGIN";
+export const REGISTER = "REGISTER";
 export const CREATE_GOAL = "CREATE_GOAL";
 export const FETCH_GOAL_LIST = "FETCH_GOAL_LIST";
 export const UPDATE_CURRENT_GOAL = "UPDATE_CURRENT_GOAL";
