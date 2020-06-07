@@ -4,13 +4,11 @@
 const express = require("express");
 const path = require("path");
 require("dotenv").config();
-let ObjectID = require("mongodb").ObjectID;
-const DB = require(path.join(__dirname, "modules", "database.js"));
 const cors = require("cors");
 const mongoose = require("mongoose");
+mongoose.set("useFindAndModify", false);
 const passport = require("passport");
 const session = require("express-session");
-var cookieParser = require("cookie-parser");
 
 const userRoutes = require("./routes/users");
 const taskRoutes = require("./routes/tasks");

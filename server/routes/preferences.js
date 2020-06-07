@@ -1,16 +1,15 @@
 const express = require("express");
 const router = express.Router();
-const path = require("path");
-let ObjectID = require("mongodb").ObjectID;
-const DB = require(path.join(__dirname, "../", "modules", "database.js"));
+const { ObjectID } = require("mongodb");
+
 const User = require("../models/User");
 
-// SECTION - CREATE PREFERENCES
+// SECTION - CREATE PREFERENCE
 // Add a new preference
 router.post("/:userid", async (req, res) => {
     let userid = req.params.userid;
     let errors = [];
-    if (!validID(userid)) {
+    if (userid == undefined || userid.length != 24) {
         errors.push("a valid userid must be set as a url parameter");
     }
 
@@ -20,6 +19,7 @@ router.post("/:userid", async (req, res) => {
     }
 
     let newPreference = {
+        _id: new ObjectID(),
         title: req.body.title,
     };
 
@@ -49,69 +49,83 @@ router.post("/:userid", async (req, res) => {
 // Fetch all preferences
 router.get("/:userid", async (req, res) => {
     let userid = req.params.userid;
-    let code = 400;
     let preferences = [];
-    if (!validID(userid)) {
-        res.status(code).send("a valid userid must be set as a url parameter");
+    let errors = [];
+
+    if (userid == undefined || userid.length != 24) {
+        errors.push("a valid userid must be set as a url parameter");
+    }
+
+    if (errors.length > 0) {
+        res.status(400).send(errors);
         return;
     }
-    userid = new ObjectID(userid);
 
-    await DB.fetchAllPreferences(userid)
-        .then((res) => {
-            preferences = res;
-            code = res ? 200 : 400;
-        })
-        .catch((err) => {
-            console.error(err);
-            code = 400;
-        });
+    await User.findById(userid).then((user) => {
+        if (user) {
+            preferences = user.preferences;
+        } else {
+            errors.push(
+                "could not find a user in the database with the given user id"
+            );
+        }
+    });
 
-    if (code == 200) {
-        res.status(code).send(preferences);
-    } else {
-        res.status(code).send(
-            "Could not find a match to given IDs in the DB. Or else check databse connection"
-        );
+    if (errors.length > 0) {
+        res.status(400).send(errors);
+        return;
     }
+
+    res.status(200).send(preferences);
 });
 // !SECTION
 
 // SECTION - FETCH PREFERENCE
 // Fetch a preference
 router.get("/:userid/:preferenceid", async (req, res) => {
-    let userid = req.params.userid;
-    let preferenceid = req.params.preferenceid;
-    let code = 400;
-    let preference = {};
-    if (!validID(userid)) {
-        res.status(code).send("a valid userid must be set as a url parameter");
+    let { userid, preferenceid } = req.params;
+    let errors = [];
+    let preference = null;
+
+    if (userid == undefined || userid.length != 24) {
+        errors.push("a valid userid must be set as a url parameter");
+    }
+
+    if (preferenceid == undefined || preferenceid.length != 24) {
+        errors.push("a valid preferenceid must be set as a url parameter");
+    }
+
+    if (errors.length > 0) {
+        res.status(400).send(errors);
         return;
     }
-    if (!validID(preferenceid)) {
-        res.status(code).send(
-            "a valid preferenceid must be set as a url parameter"
-        );
-        return;
-    }
-    userid = new ObjectID(userid);
 
-    await DB.fetchPreference(userid, preferenceid)
-        .then((res) => {
-            preference = res;
-            code = res ? 200 : 400;
-        })
-        .catch((err) => {
-            console.error(err);
-            code = 400;
-        });
+    await User.findById(userid).then((user) => {
+        if (user) {
+            // User found
+            for (p of user.preferences) {
+                if (p._id == preferenceid) {
+                    // Preference found
+                    preference = p;
+                    break;
+                }
+            }
+            if (preference == null) {
+                errors.push(
+                    "could not find a preference in the database for the given preference id for this user"
+                );
+            }
+        } else {
+            errors.push(
+                "could not find a user in the database with the given user id"
+            );
+        }
+    });
 
-    if (code == 200) {
-        res.status(code).send(preference);
+    if (errors.length > 0) {
+        res.status(400).send(errors);
     } else {
-        res.status(code).send(
-            "Could not find a match to given IDs in the DB. Or else check databse connection"
-        );
+        res.status(200).send(preference);
     }
 });
 // !SECTION

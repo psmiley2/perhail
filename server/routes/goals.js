@@ -1,44 +1,48 @@
 const express = require("express");
 const router = express.Router();
-const path = require("path");
-let ObjectID = require("mongodb").ObjectID;
-const DB = require(path.join(__dirname, "../", "modules", "database.js"));
+const { ObjectID } = require("mongodb");
+
+const User = require("../models/User");
 
 // SECTION - CREATE GOAL
 // Create a new goal
 router.post("/:userid", async (req, res) => {
     let userid = req.params.userid;
-    let code = 400;
+    let errors = [];
+
     if (!validID(userid)) {
-        res.status(code).send("a valid userid must be set as a url parameter");
+        errors.push("a valid userid must be set as a url parameter");
+    }
+
+    if (errors.length > 0) {
+        res.status(400).send(errors);
         return;
     }
-    userid = new ObjectID(userid);
+
+    let { title, priority } = req.body;
     let goal = {
         _id: new ObjectID(),
-        title: req.body.title, // TODO - if no title is given make it ""
-        priority: req.body.priority, // TODO - Set a default priority if none is given
-        createdOn: new Date(),
-        // TODO - Add fields (Sub goals, Progress, time since start, smart goals ect.)
+        title,
+        priority,
+        created: new Date(),
     };
 
-    await DB.insertGoal(userid, goal)
-        .then((res) => {
-            if (res >= 1) {
-                code = 201;
-            } else {
-                code = 400;
+    await User.findByIdAndUpdate(userid, {
+        $push: {
+            goals: goal,
+        },
+    })
+        .then((user) => {
+            if (!user) {
+                errors.push("no user was found for the given user id");
             }
         })
         .catch((err) => console.error(err));
-    if (code == 201) {
-        res.status(code).send(goal);
-    } else if (code == 400) {
-        res.status(code).send(
-            "could not find a match in the database based on passed in ID"
-        );
+
+    if (errors.length > 0) {
+        res.status(400).send(errors);
     } else {
-        res.status(500).send("unexpected error");
+        res.status(201).send(goal);
     }
 });
 // !SECTION
@@ -47,62 +51,32 @@ router.post("/:userid", async (req, res) => {
 // Fetch all goals
 router.get("/:userid", async (req, res) => {
     let userid = req.params.userid;
-    let code = 400;
     let goals = [];
+    let errors = [];
+
     if (!validID(userid)) {
-        res.status(code).send("a valid userid must be set as a url parameter");
+        errors.push("a valid userid must be set as a url parameter");
+    }
+
+    if (errors.length > 0) {
+        res.status(400).send(errors);
         return;
     }
-    userid = new ObjectID(userid);
 
-    await DB.fetchAllGoals(userid)
-        .then((res) => {
-            goals = res;
-            code = res ? 200 : 400;
+    await User.findById(userid)
+        .then((user) => {
+            if (user) {
+                goals = user.goals;
+            } else {
+                errors.push("no user found for given user id");
+            }
         })
-        .catch((err) => {
-            console.error(err);
-            code = 400;
-        });
+        .catch((err) => console.error(err));
 
-    if (code == 200) {
-        res.status(code).send(goals);
+    if (errors.length > 0) {
+        res.status(400).send(errors);
     } else {
-        res.status(code).send(
-            "Could not find a match to given userid in the DB. Or else check databse connection"
-        );
-    }
-});
-// !SECTION
-
-// SECTION - FETCH ALL GOALS
-// Fetch all goals
-router.get("/:userid", async (req, res) => {
-    let userid = req.params.userid;
-    let code = 400;
-    let goals = [];
-    if (!validID(userid)) {
-        res.status(code).send("a valid userid must be set as a url parameter");
-        return;
-    }
-    userid = new ObjectID(userid);
-
-    await DB.fetchAllGoals(userid)
-        .then((res) => {
-            goals = res;
-            code = res ? 200 : 400;
-        })
-        .catch((err) => {
-            console.error(err);
-            code = 400;
-        });
-
-    if (code == 200) {
-        res.status(code).send(goals);
-    } else {
-        res.status(code).send(
-            "Could not find a match to given userid in the DB. Or else check databse connection"
-        );
+        res.status(200).send(goals);
     }
 });
 // !SECTION
@@ -110,36 +84,47 @@ router.get("/:userid", async (req, res) => {
 // SECTION - FETCH GOAL
 // Fetch a goal
 router.get("/:userid/:goalid", async (req, res) => {
-    let userid = req.params.userid;
-    let goalid = req.params.goalid;
-    let code = 400;
-    let goal = {};
-    if (!validID(userid)) {
-        res.status(code).send("a valid userid must be set as a url parameter");
-        return;
+    let { userid, goalid } = req.params;
+    let goal = null;
+    let errors = [];
+    if (userid == undefined || userid.length != 24) {
+        errors.push("a valid userid must be set as a url parameter");
     }
-    if (!validID(goalid)) {
-        res.status(code).send("a valid goalid must be set as a url parameter");
-        return;
+    if (goalid == undefined || goalid.length != 24) {
+        errors.push("a valid goalid must be set as a url parameter");
     }
-    userid = new ObjectID(userid);
 
-    await DB.fetchGoal(userid, goalid)
-        .then((res) => {
-            goal = res;
-            code = res ? 200 : 400;
+    if (errors.length > 0) {
+        res.status(400).send(errors);
+        return;
+    }
+
+    await User.findById(userid)
+        .then((user) => {
+            if (user) {
+                // User found
+                for (g of user.goals) {
+                    if (g._id == goalid) {
+                        // Goal found
+                        goal = g;
+                        break;
+                    }
+                }
+                if (goal == null) {
+                    errors.push(
+                        "no goal with the given goalid was found for this user"
+                    );
+                }
+            } else {
+                errors.push("no user found for given user id");
+            }
         })
-        .catch((err) => {
-            console.error(err);
-            code = 400;
-        });
+        .catch((err) => console.error(err));
 
-    if (code == 200) {
-        res.status(code).send(goal);
+    if (errors.length > 0) {
+        res.status(400).send(errors);
     } else {
-        res.status(code).send(
-            "Could not find a match to given IDs in the DB. Or else check databse connection"
-        );
+        res.status(200).send(goal);
     }
 });
 // !SECTION

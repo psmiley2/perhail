@@ -13,7 +13,7 @@ describe("create a preferences and then fetch it", () => {
             email: "test_delete_later",
             password: "P@ssword",
         };
-        api.post("/users")
+        api.post("/users/register")
             .type("form")
             .send(body)
             .expect(201)
@@ -201,5 +201,7 @@ describe("create a preferences and then fetch it", () => {
             .expect(400, done);
     });
 
-    // TODO - Delete created user
+    it("deletes the created user", (done) => {
+        api.delete(`/users/${userid}`).type("form").send().expect(200, done);
+    });
 });

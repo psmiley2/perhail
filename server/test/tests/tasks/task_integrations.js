@@ -12,7 +12,7 @@ describe("creating a user and then gives them a tasklist and then a task", () =>
             email: "test_delete_later",
             password: "P@ssword",
         };
-        api.post("/users")
+        api.post("/users/register")
             .type("form")
             .send(body)
             .expect(201)
@@ -64,7 +64,7 @@ describe("creating a user and then gives them a tasklist and then a task", () =>
                 expect(res.body._id).to.have.length(24);
                 expect(res.body.title).to.equal("a new task");
                 expect(res.body.completed).to.be.false;
-                expect(res.body.createdOn).to.exist;
+                expect(res.body.created).to.exist;
                 done();
             });
     });
@@ -121,5 +121,8 @@ describe("creating a user and then gives them a tasklist and then a task", () =>
     it("throws 400 on a listid that doens't exist", (done) => {
         api.get(`/tasks/list/${userid}/${fakebutvalidid}`).expect(400, done);
     });
-    // TODO - Delete the user that was just created
+
+    it("deletes the created user", (done) => {
+        api.delete(`/users/${userid}`).type("form").send().expect(200, done);
+    });
 });

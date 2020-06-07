@@ -1,5 +1,7 @@
 const express = require("express");
 const router = express.Router();
+const { ObjectID } = require("mongodb");
+
 const path = require("path");
 
 const { TaskList } = require("../models/Task");
@@ -9,14 +11,17 @@ const User = require("../models/User");
 // Create a new list of tasks
 router.post("/list/:userid", async (req, res) => {
     let userid = req.params.userid;
+    let errors = [];
     if (userid == undefined || userid.length != 24) {
         res.status(400).send("a valid userid must be set as a url parameter");
         return;
     }
 
-    let errors = [];
     let newList = new TaskList({
+        _id: new ObjectID(),
         title: req.body.title,
+        completed: false,
+        created: new Date(),
     });
 
     // Update DB
@@ -38,7 +43,7 @@ router.post("/list/:userid", async (req, res) => {
     }
 
     // No errors
-    res.status(201);
+    res.status(201).send(newList);
 });
 // !SECTION
 
@@ -80,8 +85,8 @@ router.get("/list/:userid", async (req, res) => {
 // SECTION - FETCH TASK LIST
 // Fetch a tasklist
 router.get("/list/:userid/:listid", async (req, res) => {
-    let user;
     let { userid, listid } = req.params;
+    let list = null;
     let errors = [];
 
     if (userid == undefined || userid.length != 24) {
@@ -96,20 +101,19 @@ router.get("/list/:userid/:listid", async (req, res) => {
         return;
     }
 
-    let targetList = null;
-
     // Query DB
     await User.findById(userid)
         .then((res) => {
             if (res) {
                 // User is found
-                for (list of res.taskLists) {
-                    if (list._id == listid) {
+                for (l of res.taskLists) {
+                    if (l._id == listid) {
                         // List is found
-                        targetList = list;
+                        list = l;
+                        break;
                     }
                 }
-                if (targetList == null) {
+                if (list == null) {
                     errors.push(
                         "no list was found for the given list id for this user"
                     );
@@ -128,7 +132,7 @@ router.get("/list/:userid/:listid", async (req, res) => {
     }
 
     // Else
-    res.status(200).send(targetList);
+    res.status(200).send(list);
 });
 // !SECTION
 
@@ -151,8 +155,10 @@ router.post("/:userid/:listid", async (req, res) => {
     }
 
     let task = {
+        _id: new ObjectID(),
         title: req.body.title,
         completed: false,
+        created: new Date(),
     };
 
     let action = {
@@ -162,7 +168,6 @@ router.post("/:userid/:listid", async (req, res) => {
         arrayFilters: [{ "list._id": listid }],
     };
 
-    let newTask = null;
     await User.findByIdAndUpdate(userid, action, filter)
         .then((res) => {
             if (!res) {
@@ -179,7 +184,7 @@ router.post("/:userid/:listid", async (req, res) => {
     }
 
     // No errors
-    res.status(201).send(newTask);
+    res.status(201).send(task);
 });
 // !SECTION
 

@@ -13,7 +13,7 @@ describe("create a goal and then fetch it", () => {
             email: "test_delete_later",
             password: "P@ssword",
         };
-        api.post("/users")
+        api.post("/users/register")
             .type("form")
             .send(body)
             .expect(201)
@@ -43,7 +43,7 @@ describe("create a goal and then fetch it", () => {
     it("creates a goal for that user", (done) => {
         body = {
             title: "get ripped",
-            priority: "2",
+            priority: 12,
         };
         api.post(`/goals/${userid}`)
             .type("form")
@@ -56,8 +56,8 @@ describe("create a goal and then fetch it", () => {
                 }
                 expect(res.body._id).to.have.length(24);
                 expect(res.body.title).to.equal("get ripped");
-                expect(res.body.priority).to.equal("2");
-                expect(res.body.createdOn).to.exist;
+                expect(res.body.priority).to.equal("12");
+                expect(res.body.created).to.exist;
                 goalid = res.body._id;
                 done();
             });
@@ -72,8 +72,8 @@ describe("create a goal and then fetch it", () => {
                     expect.fail();
                 }
                 expect(res.body.title).to.equal("get ripped");
-                expect(res.body.priority).to.equal("2");
-                expect(res.body.createdOn).to.exist;
+                expect(res.body.priority).to.equal(12);
+                expect(res.body.created).to.exist;
                 done();
             });
     });
@@ -87,8 +87,8 @@ describe("create a goal and then fetch it", () => {
                     expect.fail();
                 }
                 expect(res.body[0].title).to.equal("get ripped");
-                expect(res.body[0].priority).to.equal("2");
-                expect(res.body[0].createdOn).to.exist;
+                expect(res.body[0].priority).to.equal(12);
+                expect(res.body[0].created).to.exist;
                 expect(res.body).to.have.length(1);
                 done();
             });
@@ -97,7 +97,7 @@ describe("create a goal and then fetch it", () => {
     it("creates a second goal for that user", (done) => {
         body = {
             title: "get good grades in school",
-            priority: "1",
+            priority: 1,
         };
         api.post(`/goals/${userid}`)
             .type("form")
@@ -111,7 +111,7 @@ describe("create a goal and then fetch it", () => {
                 expect(res.body._id).to.have.length(24);
                 expect(res.body.title).to.equal("get good grades in school");
                 expect(res.body.priority).to.equal("1");
-                expect(res.body.createdOn).to.exist;
+                expect(res.body.created).to.exist;
                 goalid = res.body._id;
                 done();
             });
@@ -126,8 +126,8 @@ describe("create a goal and then fetch it", () => {
                     expect.fail();
                 }
                 expect(res.body.title).to.equal("get good grades in school");
-                expect(res.body.priority).to.equal("1");
-                expect(res.body.createdOn).to.exist;
+                expect(res.body.priority).to.equal(1);
+                expect(res.body.created).to.exist;
                 done();
             });
     });
@@ -153,7 +153,7 @@ describe("create a goal and then fetch it", () => {
     it("creates a goal for an fake user", (done) => {
         body = {
             title: "become a chef",
-            priority: "1",
+            priority: 1,
         };
         api.post(`/goals/${fakeid}`).type("form").send(body).expect(400, done);
     });
@@ -161,7 +161,7 @@ describe("create a goal and then fetch it", () => {
     it("creates a goal with an invalid id", (done) => {
         body = {
             title: "become a chef",
-            priority: "1",
+            priority: 1,
         };
         api.post(`/goals/${invalid}`).type("form").send(body).expect(400, done);
     });
@@ -202,5 +202,7 @@ describe("create a goal and then fetch it", () => {
         api.get(`/goals/${invalid}`).type("form").send(body).expect(400, done);
     });
 
-    // TODO - Delete created user
+    it("deletes the created user", (done) => {
+        api.delete(`/users/${userid}`).type("form").send().expect(200, done);
+    });
 });

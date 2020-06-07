@@ -2,6 +2,7 @@ const express = require("express");
 const bcrypt = require("bcryptjs");
 const router = express.Router();
 const passport = require("passport");
+const { ObjectID } = require("mongodb");
 const saltRounds = 12;
 
 // Load User model
@@ -88,16 +89,20 @@ router.post("/register", async (req, res) => {
     await bcrypt
         .hash(password, salt)
         .then((hash) => {
-            console.log(hash);
             hashedPassword = hash;
         })
         .catch((err) => console.error(err));
 
     newUser = new User({
+        _id: new ObjectID(),
         userInfo: {
             email,
             password: hashedPassword,
         },
+        taskLists: [],
+        goals: [],
+        events: [],
+        preferences: [],
     });
 
     await newUser
@@ -147,6 +152,39 @@ router.get("/", forwardAuthenticated, (req, res) => res.send("welcome"));
 router.get("/dashboard", ensureAuthenticated, (req, res) => {
     res.send("hello ");
 });
+
+// SECTION - DELETE USER
+// Delete a user
+router.delete("/:userid", async (req, res) => {
+    let userid = req.params.userid;
+    let errors = [];
+
+    if (userid == undefined || userid.length != 24) {
+        errors.push("a valid userid must be set as a url parameter");
+    }
+
+    if (errors.length > 0) {
+        res.status(400).send(errors);
+        return;
+    }
+
+    await User.findByIdAndDelete(userid)
+        .then((user) => {
+            if (!user) {
+                errors.push("could not find a user with the given id");
+            }
+        })
+        .catch((err) => console.error(err));
+
+    if (errors.length > 0) {
+        res.status(400).send(errors);
+    } else {
+        res.status(200).send();
+    }
+});
+
+// TODO - Add Password Protected Validation
+// !SECTION
 
 // TODO - Update Email
 // TODO - Reset / Recover Password

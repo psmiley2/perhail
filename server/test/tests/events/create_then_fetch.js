@@ -13,7 +13,7 @@ describe("create an event and then fetch it", () => {
             email: "test_delete_later",
             password: "P@ssword",
         };
-        api.post("/users")
+        api.post("/users/register")
             .type("form")
             .send(body)
             .expect(201)
@@ -53,8 +53,6 @@ describe("create an event and then fetch it", () => {
                     console.error("error: ", err);
                     expect.fail();
                 }
-                expect(res.body._id).to.have.length(24);
-                expect(res.body.title).to.equal("go swimming");
                 eventid = res.body._id;
                 done();
             });
@@ -191,5 +189,11 @@ describe("create an event and then fetch it", () => {
         api.get(`/events/${invalid}`).type("form").send(body).expect(400, done);
     });
 
-    // TODO - Delete created user
+    it("deletes the created user", (done) => {
+        api.delete(`/users/${userid}`).type("form").send().expect(200, done);
+    });
+
+    it("can no longer find the user in the database", (done) => {
+        api.get(`/users/find/${userid}`).type("form").send().expect(400, done);
+    });
 });
