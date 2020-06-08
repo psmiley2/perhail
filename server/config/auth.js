@@ -1,11 +1,9 @@
 module.exports = {
     ensureAuthenticated: function (req, res, next) {
-        console.log(req._passport.instance);
         if (req.isAuthenticated()) {
-            console.log("hello");
             return next();
         } else {
-            res.redirect("/users/f");
+            res.status(400).send("Log in first");
         }
     },
     forwardAuthenticated: function (req, res, next) {

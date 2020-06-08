@@ -6,7 +6,9 @@ import Toolbar from "@material-ui/core/Toolbar";
 import Typography from "@material-ui/core/Typography";
 import GridOn from "@material-ui/icons/GridOn";
 import React from "react";
+import { useSelector } from "react-redux";
 import Login from "./auth/Login";
+import Logout from "./auth/Logout";
 import Register from "./auth/Register";
 
 const useStyles = makeStyles((theme) => ({
@@ -23,7 +25,21 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 export default function ButtonAppBar() {
+    let userID = useSelector((state) => state.user.id);
     const classes = useStyles();
+
+    const authButtons = () => {
+        if (userID) {
+            return <Logout />;
+        } else {
+            return (
+                <>
+                    <Login />
+                    <Register />
+                </>
+            );
+        }
+    };
 
     return (
         <div className={classes.root}>
@@ -43,8 +59,7 @@ export default function ButtonAppBar() {
                         variant="h6"
                         className={classes.title}
                     ></Typography>
-                    <Login />
-                    <Register />
+                    {authButtons()}
                 </Toolbar>
             </AppBar>
         </div>

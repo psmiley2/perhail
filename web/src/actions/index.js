@@ -9,7 +9,9 @@ import {
     FETCH_TASK_LIST,
     FETCH_TASK_LISTS,
     LOGIN,
+    LOGOUT,
     REGISTER,
+    SET_SESSION,
     UPDATE_CURRENT_GOAL,
     UPDATE_CURRENT_TASK_LIST,
 } from "./types";
@@ -22,7 +24,9 @@ export const login = (email, password) => async (dispatch) => {
     };
     let response;
     await axios
-        .post("http://localhost:8080/users/login", body)
+        .post("http://localhost:8080/users/login", body, {
+            withCredentials: true,
+        })
         .then((res) => {
             response = res;
         })
@@ -31,6 +35,18 @@ export const login = (email, password) => async (dispatch) => {
         });
 
     dispatch({ type: LOGIN, payload: response.data });
+};
+
+export const logout = () => async (dispatch) => {
+    await axios
+        .post("http://localhost:8080/users/logout", {
+            withCredentials: true,
+        })
+        .catch((err) => {
+            console.error(err);
+        });
+
+    dispatch({ type: LOGOUT });
 };
 
 export const register = (email, password) => async (dispatch) => {
@@ -49,6 +65,21 @@ export const register = (email, password) => async (dispatch) => {
         });
 
     dispatch({ type: REGISTER, payload: response.data });
+};
+
+export const setSession = () => async (dispatch) => {
+    let response;
+    await axios
+        .get("http://localhost:8080/users/session", { withCredentials: true })
+        .then((res) => {
+            console.log("session res: ", res);
+            response = res;
+        })
+        .catch((err) => {
+            console.error(err);
+        });
+
+    dispatch({ type: SET_SESSION, payload: response.data });
 };
 
 // SECTION - Task Lists

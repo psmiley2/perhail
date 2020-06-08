@@ -65,6 +65,7 @@ router.post("/register", async (req, res) => {
         return;
     }
 
+    // Makes sure this email does not already exist in the database
     await User.findOne({ "userInfo.email": email })
         .then((user) => {
             if (user) {
@@ -84,6 +85,7 @@ router.post("/register", async (req, res) => {
     let newUser;
     let salt;
 
+    // Generates salt for hasing
     await bcrypt
         .genSalt(saltRounds)
         .then((s) => {
@@ -91,6 +93,7 @@ router.post("/register", async (req, res) => {
         })
         .catch((err) => console.error(err));
 
+    // Uses the salt to hash the password
     await bcrypt
         .hash(password, salt)
         .then((hash) => {
@@ -98,6 +101,7 @@ router.post("/register", async (req, res) => {
         })
         .catch((err) => console.error(err));
 
+    // Populates user schema
     newUser = new User({
         _id: new ObjectID(),
         userInfo: {
@@ -110,6 +114,7 @@ router.post("/register", async (req, res) => {
         preferences: [],
     });
 
+    // Puts user in database
     await newUser
         .save()
         .then((user) => {
@@ -124,6 +129,13 @@ router.post("/register", async (req, res) => {
         return;
     }
 
+    // Logs in user
+    passport.authenticate("local", (err, account) => {
+        req.logIn(account, function () {
+            res.status(err ? 500 : 200).send(err ? err : account);
+        });
+    });
+
     // No errors
     res.status(201).send(newUser);
 });
@@ -137,13 +149,13 @@ router.post("/login", passport.authenticate("local"), async (req, res) => {
 
     if (userid == undefined || userid.length != 24) {
         errors.push("the session is storing an invalid userid");
-        return;
     }
 
     if (errors.length > 0) {
         res.status(400).send(errors);
         return;
     }
+
     await User.findById(userid)
         .then((u) => {
             user = u;
@@ -155,12 +167,27 @@ router.post("/login", passport.authenticate("local"), async (req, res) => {
 });
 // !SECTION
 
-// Welcome Page
-router.get("/", forwardAuthenticated, (req, res) => res.send("welcome"));
+// SECTION - LOGOUT USER
+// Logout a user
+router.post("/logout", async (req, res) => {
+    req.logout();
+    req.session.destroy();
+    res.status(201).end();
+    // TODO - Make some tests
+});
+// !SECTION
 
-// Dashboard
+// SECTION - GET SESSION
+// Get the passport session info
+router.get("/session", ensureAuthenticated, async (req, res) => {
+    res.status(200).send(req.session.passport.user);
+    // TODO - Make some tests
+});
+// !SECTION
+
 router.get("/dashboard", ensureAuthenticated, (req, res) => {
-    res.send("hello ");
+    console.log("cookies", req.cookies);
+    res.send("hello");
 });
 
 // SECTION - DELETE USER

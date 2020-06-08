@@ -18,6 +18,7 @@ export default function TaskListAdd() {
     return (
         <form onSubmit={(e) => handleSubmit(e)}>
             <TextField
+                autoFocus
                 id="task-list-add"
                 type="text"
                 label="Add A New List"

@@ -146,7 +146,7 @@ router.post("/:userid/:listid", async (req, res) => {
     }
 
     if (listid == undefined || listid.length != 24) {
-        errors.push("a valid userid must be set as a url parameter");
+        errors.push("a valid listid must be set as a url parameter");
     }
 
     if (errors.length > 0) {
@@ -185,6 +185,62 @@ router.post("/:userid/:listid", async (req, res) => {
 
     // No errors
     res.status(201).send(task);
+});
+// !SECTION
+
+// SECTION - EDIT TASK
+// Edit A Task
+router.post("/:userid/:listid/:taskid", async (req, res) => {
+    let { userid, listid, taskid } = req.params;
+    let errors = [];
+    if (userid == undefined || userid.length != 24) {
+        errors.push("a valid userid must be set as a url parameter");
+    }
+
+    if (listid == undefined || listid.length != 24) {
+        errors.push("a valid listid must be set as a url parameter");
+    }
+
+    if (taskid == undefined || taskid.length != 24) {
+        errors.push("a valid taskid must be set as a url parameter");
+    }
+
+    if (errors.length > 0) {
+        res.status(400).send(errors);
+        return;
+    }
+
+    let taskUpdates = {
+        _id: req.body._id,
+        title: req.body.title,
+        completed: req.body.completed,
+        created: req.body.created,
+    };
+
+    let action = {
+        $set: { "taskLists.$[list].tasks.$[task]": taskUpdates },
+    };
+    let filters = {
+        arrayFilters: [{ "list._id": listid }, { "task._id": taskid }],
+    };
+
+    await User.findByIdAndUpdate(userid, action, filters)
+        .then((res) => {
+            if (!res) {
+                errors.push("no user was found with the given userid");
+            }
+        })
+        .catch((err) => {
+            console.error(err);
+        });
+
+    if (errors.length > 0) {
+        res.status(400).send(errors);
+        return;
+    }
+
+    // No errors
+    res.status(201).send(taskUpdates);
 });
 // !SECTION
 
