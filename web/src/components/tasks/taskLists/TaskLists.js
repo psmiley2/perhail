@@ -1,7 +1,6 @@
 import { Box } from "@material-ui/core";
 import IconButton from "@material-ui/core/IconButton";
 import Popover from "@material-ui/core/Popover";
-import { makeStyles } from "@material-ui/core/styles";
 import Typography from "@material-ui/core/Typography";
 import AddCircleOutlinedIcon from "@material-ui/icons/AddCircleOutlined";
 import TreeItem from "@material-ui/lab/TreeItem";
@@ -9,14 +8,7 @@ import React from "react";
 import TaskListAdd from "./TaskListAdd";
 import TaskListList from "./TaskListList";
 
-const useStyles = makeStyles((theme) => ({
-    typography: {
-        padding: theme.spacing(2),
-    },
-}));
-
 export default function TaskLists({ nodeId }) {
-    const classes = useStyles();
     const [anchorEl, setAnchorEl] = React.useState(null);
 
     const handleClick = (event) => {

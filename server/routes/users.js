@@ -108,10 +108,7 @@ router.post("/register", async (req, res) => {
             email,
             password: hashedPassword,
         },
-        taskLists: [],
-        goals: [],
-        events: [],
-        preferences: [],
+        habits: [],
     });
 
     // Puts user in database

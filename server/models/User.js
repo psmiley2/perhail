@@ -1,8 +1,11 @@
 const mongoose = require("mongoose");
-const { TaskListSchema } = require("./Task");
-const { GoalSchema } = require("./Goal");
-const { PreferenceSchema } = require("./Preference");
-const { EventSchema } = require("./Event");
+// const { TaskListSchema } = require("./Task");
+// const { GoalSchema } = require("./Goal");
+// const { PreferenceSchema } = require("./Preference");
+// const { EventSchema } = require("./Event");
+const {TaskSchema} = require("./Task")
+const {HabitSchema} = require("./Habit")
+
 const UserSchema = new mongoose.Schema({
     userInfo: {
         email: {
@@ -18,22 +21,30 @@ const UserSchema = new mongoose.Schema({
             default: Date.now,
         },
     },
-    taskLists: {
-        type: [TaskListSchema],
+    habits: {
+        type: [HabitSchema],
         default: [],
     },
-    goals: {
-        type: [GoalSchema],
+    tasks: {
+        type: [TaskSchema],
         default: [],
-    },
-    events: {
-        type: [EventSchema],
-        default: [],
-    },
-    preferences: {
-        type: [PreferenceSchema],
-        default: [],
-    },
+    }
+    // taskLists: {
+    //     type: [TaskListSchema],
+    //     default: [],
+    // },
+    // goals: {
+    //     type: [GoalSchema],
+    //     default: [],
+    // },
+    // events: {
+    //     type: [EventSchema],
+    //     default: [],
+    // },
+    // preferences: {
+    //     type: [PreferenceSchema],
+    //     default: [],
+    // },
 });
 
 const User = mongoose.model("UserSchema", UserSchema, "users");

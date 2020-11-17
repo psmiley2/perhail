@@ -7,6 +7,7 @@ import Typography from "@material-ui/core/Typography";
 import GridOn from "@material-ui/icons/GridOn";
 import React from "react";
 import { useSelector } from "react-redux";
+import history from "../history";
 import Login from "./auth/Login";
 import Logout from "./auth/Logout";
 import Register from "./auth/Register";
@@ -53,8 +54,10 @@ export default function ButtonAppBar() {
                     >
                         <GridOn />
                     </IconButton>
-                    <Button color="inherit">Extensions</Button>
-                    <Button color="inherit">Market</Button>
+                    <Button color="inherit" onClick={() => history.push("/build")}>Build</Button>
+                    <Button color="inherit" onClick={() => history.push("/prepare")}>Prepare</Button>
+                    <Button color="inherit" onClick={() => history.push("/complete")}>Complete</Button>
+                    <Button color="inherit" onClick={() => history.push("/track")}>Track</Button>
                     <Typography
                         variant="h6"
                         className={classes.title}

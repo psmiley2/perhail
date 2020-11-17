@@ -4,7 +4,6 @@
 const express = require("express");
 require("dotenv").config();
 const cors = require("cors");
-const cookieSession = require("cookie-session");
 const mongoose = require("mongoose");
 mongoose.set("useFindAndModify", false);
 const passport = require("passport");
@@ -12,10 +11,11 @@ const session = require("express-session");
 var MongoStore = require("connect-mongo")(session);
 const userRoutes = require("./routes/users");
 const taskRoutes = require("./routes/tasks");
-const goalRoutes = require("./routes/goals");
-const eventRoutes = require("./routes/events");
-const preferenceRoutes = require("./routes/preferences");
-var cookieParser = require("cookie-parser");
+// const goalRoutes = require("./routes/goals");
+// const eventRoutes = require("./routes/events");
+// const preferenceRoutes = require("./routes/preferences");
+const habitRoutes = require("./routes/habits")
+
 const User = require("./models/User");
 let app = express();
 
@@ -42,18 +42,6 @@ app.use(
         credentials: true,
     })
 );
-
-const authCheck = (req, res, next) => {
-    if (!req.user) {
-        res.status(401).json({
-            authenticated: false,
-            message: "user has not been authenticated",
-        });
-    } else {
-        next();
-    }
-};
-
 // Express session
 app.use(
     session({
@@ -73,10 +61,11 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 app.use("/users", userRoutes);
+app.use("/habits", habitRoutes)
 app.use("/tasks", taskRoutes);
-app.use("/goals", goalRoutes);
-app.use("/events", eventRoutes);
-app.use("/preferences", preferenceRoutes);
+// app.use("/goals", goalRoutes);
+// app.use("/events", eventRoutes);
+// app.use("/preferences", preferenceRoutes);
 
 // Server Start
 const PORT = process.env.PORT || 8080;

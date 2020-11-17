@@ -1,40 +1,22 @@
 import {
-    CREATE_TASK,
-    CREATE_TASK_LIST,
-    FETCH_TASK_LIST,
-    FETCH_TASK_LISTS,
-    UPDATE_CURRENT_TASK_LIST,
+    CREATE_TASK, FETCH_TASKS
 } from "../actions/types";
 
 let initialState = {
-    lists: [],
-    currentList: {},
+    tasks: []
 };
 
 export default (state = initialState, action) => {
     switch (action.type) {
-        // SECTION - Task Lists
-        case FETCH_TASK_LISTS:
-            return { ...state, lists: action.payload };
-        case FETCH_TASK_LIST:
-            return { ...state, currentList: action.payload };
-        case CREATE_TASK_LIST:
-            return {
-                ...state,
-                taskLists: [...state.lists, action.payload],
-            };
-        case UPDATE_CURRENT_TASK_LIST:
-            return {
-                ...state,
-                currentList: action.payload,
-            };
-        // SECTION - Tasks
         case CREATE_TASK:
-            let newList = { ...state.currentList };
-            newList.tasks.push(action.payload);
             return {
                 ...state,
-                currentList: newList,
+                tasks: [...state.tasks, action.payload,]
+            };
+        case FETCH_TASKS:
+            return {
+                ...state,
+                tasks: action.payload,
             };
         default:
             return state;

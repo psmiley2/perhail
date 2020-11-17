@@ -1,7 +1,7 @@
 import List from "@material-ui/core/List";
 import ListItem from "@material-ui/core/ListItem";
-import ListItemText from "@material-ui/core/ListItemText";
 import React from "react";
+import Task from "./Task";
 export default function TaskList({ list }) {
     if (list == null) {
         return <div>Loading...</div>;
@@ -13,9 +13,9 @@ export default function TaskList({ list }) {
 
     return (
         <List>
-            {list.tasks.map((list, index) => (
+            {list.tasks.map((t, index) => (
                 <ListItem key={index}>
-                    <ListItemText>{list.title}</ListItemText>
+                    <Task t={t} />
                 </ListItem>
             ))}
         </List>

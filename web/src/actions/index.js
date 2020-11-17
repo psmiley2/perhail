@@ -2,18 +2,40 @@ import axios from "axios";
 import {
     CREATE_EVENT,
     CREATE_GOAL,
+    CREATE_HABIT,
     CREATE_TASK,
     CREATE_TASK_LIST,
     FETCH_ALL_EVENTS,
     FETCH_GOAL_LIST,
+
+
+
+
+
+
+
+
+
+
+    FETCH_HABITS, FETCH_TASKS,
+
+
+
+
+
+
+
+
+
     FETCH_TASK_LIST,
-    FETCH_TASK_LISTS,
+
     LOGIN,
     LOGOUT,
     REGISTER,
     SET_SESSION,
     UPDATE_CURRENT_GOAL,
     UPDATE_CURRENT_TASK_LIST,
+    UPDATE_TASK
 } from "./types";
 
 // SECTION - Users
@@ -68,25 +90,34 @@ export const register = (email, password) => async (dispatch) => {
 };
 
 export const setSession = () => async (dispatch) => {
-    let response;
+    let response = {};
     await axios
         .get("http://localhost:8080/users/session", { withCredentials: true })
         .then((res) => {
-            console.log("session res: ", res);
-            response = res;
+            if (res.status == 400) {
+                response = "";
+            } else {
+                response = res;
+            }
         })
         .catch((err) => {
-            console.error(err);
+            if (err == "Request failed with status code 400") {
+                response.data = null;
+            } else {
+                console.error(err);
+            }
         });
 
     dispatch({ type: SET_SESSION, payload: response.data });
 };
 
-// SECTION - Task Lists
-export const fetchTaskLists = (userid) => async (dispatch) => {
+// SECTION - NEW
+export const createHabit = (userid, habitInfo) => async (
+    dispatch
+) => {
     let response;
     await axios
-        .get(`http://localhost:8080/tasks/list/${userid}`)
+        .post(`http://localhost:8080/habits/${userid}`, habitInfo)
         .then((res) => {
             response = res;
         })
@@ -94,9 +125,58 @@ export const fetchTaskLists = (userid) => async (dispatch) => {
             console.error(err);
         });
 
-    dispatch({ type: FETCH_TASK_LISTS, payload: response.data });
+    dispatch({ type: CREATE_HABIT, payload: response.data });
 };
 
+export const fetchHabits = (userid) => async (dispatch) => {
+    let response;
+    await axios
+        .get(`http://localhost:8080/habits/${userid}`)
+        .then((res) => {
+            console.log("RESPONSE: ", res)
+            response = res;
+        })
+        .catch((err) => {
+            console.error(err);
+        });
+
+    dispatch({ type: FETCH_HABITS, payload: response.data });
+};
+
+
+export const fetchTasks = (userid) => async (dispatch) => {
+    let response;
+    await axios
+        .get(`http://localhost:8080/tasks/${userid}`)
+        .then((res) => {
+            response = res;
+        })
+        .catch((err) => {
+            console.error(err);
+        });
+
+    dispatch({ type: FETCH_TASKS, payload: response.data });
+};
+
+// SECTION - Tasks
+export const createTask = (userid, taskInfo) => async (
+    dispatch
+) => {
+    let response;
+    await axios
+        .post(`http://localhost:8080/tasks/${userid}`, taskInfo)
+        .then((res) => {
+            response = res;
+        })
+        .catch((err) => {
+            console.error(err);
+        });
+
+    dispatch({ type: CREATE_TASK, payload: response.data });
+};
+
+
+// SECTION - OLD
 export const fetchTaskList = (userid, listid) => async (dispatch) => {
     let response;
     await axios
@@ -128,21 +208,26 @@ export const createTaskList = (userid, listInfo) => async (dispatch) => {
     dispatch({ type: CREATE_TASK_LIST, payload: response.data });
 };
 
-// SECTION - Tasks
-export const createTask = (userid, taskListID, taskInfo) => async (
+
+export const updateTask = (userID, taskListID, taskID, taskInfo) => async (
     dispatch
 ) => {
     let response;
+    console.log("info", taskInfo);
     await axios
-        .post(`http://localhost:8080/tasks/${userid}/${taskListID}`, taskInfo)
+        .post(
+            `http://localhost:8080/tasks/${userID}/${taskListID}/${taskID}`,
+            taskInfo
+        )
         .then((res) => {
+            console.log("res", res);
             response = res;
         })
         .catch((err) => {
             console.error(err);
         });
 
-    dispatch({ type: CREATE_TASK, payload: response.data });
+    dispatch({ type: UPDATE_TASK, payload: response.data });
 };
 
 // SECTION - Goals
